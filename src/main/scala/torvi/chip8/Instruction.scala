@@ -87,7 +87,6 @@ object Instruction {
     */
   def shiftRightVx(emulator: Emulator, opCode: Short) = Nil
 
-
   /**
     * 8XY7 - Sets VX to VY minus VX. VF is set to 0 when there's a borrow,
     and 1 when there isn't.
@@ -170,7 +169,7 @@ object Instruction {
   /**
     * FX1E - Adds VX to I.
     */
-  def AddVxToAddrReg(emulator: Emulator, opCode: Short) = Nil
+  def addVxToAddrReg(emulator: Emulator, opCode: Short) = Nil
 
   /**
     * FX29 - Sets I to the location of the sprite for the character in VX.
@@ -193,14 +192,14 @@ object Instruction {
     * The offset from I is increased by 1 for each value written, but I itself
     * is left unmodified.
     */
-  def RegDump(emulator: Emulator, opCode: Short) = Nil
+  def regDump(emulator: Emulator, opCode: Short) = Nil
 
   /**
     * FX65 - Fills V0 to VX (including VX) with values from memory starting at
     * address I. The offset from I is increased by 1 for each value written,
     * but I itself is left unmodified.
     */
-  def RegLoad(emulator: Emulator, opCode: Short) = Nil
+  def regLoad(emulator: Emulator, opCode: Short) = Nil
 
 }
 
