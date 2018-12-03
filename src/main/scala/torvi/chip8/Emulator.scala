@@ -1,25 +1,23 @@
 package torvi.chip8
 
-class Emulator(val memory: Array[Byte],
-               val registers: Array[Byte],
-               val addressRegister: Array[Short],
-               val stack: Array[Short],
-               val keyboardInput: Array[Boolean]) {
+import java.nio.file.{Files, Paths}
+
+class Emulator {
+  val memory: Array[Byte] = Array.fill[Byte](4096)(0)
+  val stack: Array[Short] = Array.fill[Short](16)(0)
+  val registers: Array[Byte] = Array.fill[Byte](16)(0)
+  val addressRegister: Array[Short] = Array.fill[Short](1)(0)
+  val keyboardInput: Array[Boolean]  = Array.fill[Boolean](16)(false)
   var stackPointer: Short = 0
-  var programCounter: Short = 0
+  var programCounter: Short = 0x200
   var soundTimer: Short = 0
   var delayTimer: Short = 0
-}
 
-object Emulator {
+  def loadRom(fPath: String) = {
+    val rom = Files.readAllBytes(Paths.get(fPath))
+    if(rom.length > (memory.length - 512)) throw new RomTooLargeException("Rom is too large")
 
-  def initialize(memory: Array[Byte],
-                registers: Array[Byte],
-                addressRegister: Array[Short],
-                stack: Array[Short],
-                keyboardInput: Array[Boolean]): Emulator =
-    new Emulator(memory, registers, addressRegister, stack, keyboardInput)
-
-  def loadRom(fPath: String) = println("TODO")
+    for ((b: Byte, idx: Int) <- rom.zipWithIndex) { memory(512 + idx) = b }
+  }
 
 }
