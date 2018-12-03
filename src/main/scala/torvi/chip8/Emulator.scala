@@ -20,4 +20,13 @@ class Emulator {
     for ((b: Byte, idx: Int) <- rom.zipWithIndex) { memory(512 + idx) = b }
   }
 
+  def executeCycle() = {
+    val opCode = (memory(programCounter) << 8 | memory(programCounter + 1)).toByte
+    (opCode & 0xF000) match {
+
+    }
+
+
+  }
+
 }
