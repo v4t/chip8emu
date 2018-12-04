@@ -88,34 +88,75 @@ object Instruction {
   /**
     * 8XY0 - Sets VX to the value of VY.
     */
-  def setVxToVy(emulator: Emulator, opCode: Short): Unit = {}
+  def setVxToVy(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    val y = (opCode & 0x00f0) >> 4
+    emulator.registers(x) = emulator.registers(y)
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 8XY1 - Sets VX to VX or VY. (Bitwise OR operation)
     */
-  def setVxToVxOrVy(emulator: Emulator, opCode: Short): Unit = {}
+  def setVxToVxOrVy(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    val vx = emulator.registers(x)
+    val vy = emulator.registers((opCode & 0x00f0) >> 4)
+    emulator.registers(x) = (vx | vy).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 8XY2 - Sets VX to VX and VY. (Bitwise AND operation)
     */
-  def setVxToVxAndVy(emulator: Emulator, opCode: Short): Unit = {}
+  def setVxToVxAndVy(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    val vx = emulator.registers(x)
+    val vy = emulator.registers((opCode & 0x00f0) >> 4)
+    emulator.registers(x) = (vx & vy).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 8XY3 - Sets VX to VX xor VY
     */
-  def setVxToVxXorVy(emulator: Emulator, opCode: Short): Unit = {}
+  def setVxToVxXorVy(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    val vx = emulator.registers(x)
+    val vy = emulator.registers((opCode & 0x00f0) >> 4)
+    emulator.registers(x) = (vx ^ vy).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 8XY4 - Adds VY to VX. VF is set to 1 when there's a carry,
     * and to 0 when there isn't.
     */
-  def addVyToVx(emulator: Emulator, opCode: Short): Unit = {}
+  def addVyToVx(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    val intVx = emulator.registers(x) & 0xff
+    val intVy = emulator.registers((opCode & 0x00f0) >> 4) & 0xff
+    if(intVy > (0xff - intVx)) emulator.registers(15) = 1
+    else emulator.registers(15) = 0
+
+    emulator.registers(x) = (intVx + intVy).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 8XY5 - VY is subtracted from VX. VF is set to 0 when there's a borrow,
     * and 1 when there isn't.
     */
-  def subVyFromVx(emulator: Emulator, opCode: Short): Unit = {}
+  def subVyFromVx(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    val intVx = emulator.registers(x) & 0xff
+    val intVy = emulator.registers((opCode & 0x00f0) >> 4) & 0xff
+    if(intVy > intVx) emulator.registers(15) = 0
+    else emulator.registers(15) = 1
+
+    emulator.registers(x) = (intVx - intVy).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 8XY6 - Stores the least significant bit of VX in VF
