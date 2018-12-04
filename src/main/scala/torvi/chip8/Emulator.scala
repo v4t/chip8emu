@@ -1,7 +1,5 @@
 package torvi.chip8
 
-import java.nio.file.{Files, Paths}
-
 class Emulator {
   val memory: Array[Byte] = Array.fill[Byte](4096)(0)
   val stack: Array[Short] = Array.fill[Short](16)(0)
@@ -12,6 +10,7 @@ class Emulator {
   var programCounter: Short = 0x200
   var soundTimer: Short = 0
   var delayTimer: Short = 0
+  var drawFlag = true
 
   def loadRom(rom: Array[Byte]) = {
     if (rom.length > (memory.length - 512)) throw new RomTooLargeException("Rom is too large")
