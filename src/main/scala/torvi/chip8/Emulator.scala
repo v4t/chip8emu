@@ -1,8 +1,10 @@
 package torvi.chip8
 
+import scala.collection.mutable.Stack
+
 class Emulator {
   val memory: Array[Byte] = Array.fill[Byte](4096)(0)
-  val stack: Array[Short] = Array.fill[Short](16)(0)
+  val stack = Stack[Short]()
   val registers: Array[Byte] = Array.fill[Byte](16)(0)
   val addressRegister: Array[Short] = Array.fill[Short](1)(0)
   val keyboardInput: Array[Boolean] = Array.fill[Boolean](16)(false)
@@ -21,7 +23,7 @@ class Emulator {
   }
 
   def executeCycle() = {
-    val opCode = (memory(programCounter) << 8 | memory(programCounter + 1)).toByte
+    val opCode = ((memory(programCounter) << 8) | (memory(programCounter + 1) & 0x00FF)).toShort
     opCode & 0xF000 match {
       case 0x0000 =>
         opCode & 0x00ff match {
