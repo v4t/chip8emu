@@ -42,4 +42,90 @@ class InstructionSuite extends  FunSuite {
     Instruction.jumpToAddr(emu, 0x1234)
     assert(emu.programCounter == 0x234.toShort)
   }
+
+  test("2NNN: Call subroutine") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+
+    Instruction.callSub(emu, 0x2234)
+    assert(emu.stack.length == 1)
+    assert(emu.stack.pop() == 0x300)
+    assert(emu.programCounter == 0x234.toShort)
+  }
+
+  test("3XNN: Skips next instruction if VX equals NN") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x7
+
+    Instruction.skipVxEqualsNn(emu, 0x3407)
+    assert(emu.programCounter == (0x300 + 4).toShort)
+  }
+
+  test("3XNN: Doesn't skip next instruction if VX does not equal NN") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+
+    Instruction.skipVxEqualsNn(emu, 0x3404)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("4XNN: Skips next instruction if VX does not equal NN") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+
+    Instruction.skipVxNotEqualsNn(emu, 0x4404)
+    assert(emu.programCounter == (0x300 + 4).toShort)
+  }
+
+  test("4XNN: Doesn't skip next instruction if VX equals NN") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x7
+
+    Instruction.skipVxNotEqualsNn(emu, 0x4407)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("5XY0: Skips next instruction if VX equals VY") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x7
+    emu.registers(5) = 0x7
+
+    Instruction.skipVxEqualsVy(emu, 0x5450)
+    assert(emu.programCounter == (0x300 + 4).toShort)
+  }
+
+  test("5XY0: Doesn't skip next instruction if VX does not equal VY") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.registers(5) = 0x6
+
+    Instruction.skipVxEqualsNn(emu, 0x5450)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("6XNN: Set VX to NN") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+
+    Instruction.setVxToNn(emu, 0x6466)
+    assert(emu.registers(4) == 0x66)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("7XNN: Add NN to VX") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+
+    Instruction.addNnToVx(emu, 0x7466)
+    assert(emu.registers(4) == 0x5 + 0x66)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
 }

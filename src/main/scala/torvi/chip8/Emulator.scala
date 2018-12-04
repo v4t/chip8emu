@@ -31,7 +31,7 @@ class Emulator {
           case 0x00ee => Instruction.returnFromSub(this, opCode)
         }
       case 0x1000 => Instruction.jumpToAddr(this, opCode)
-      case 0x2000 => Instruction.callAddr(this, opCode)
+      case 0x2000 => Instruction.callSub(this, opCode)
       case 0x3000 => Instruction.skipVxEqualsNn(this, opCode)
       case 0x4000 => Instruction.skipVxNotEqualsNn(this, opCode)
       case 0x5000 => Instruction.skipVxEqualsVy(this, opCode)
