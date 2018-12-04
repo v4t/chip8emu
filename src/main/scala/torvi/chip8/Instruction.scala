@@ -4,7 +4,10 @@ object Instruction {
   /**
     * 00E0 - Clears the screen.
     */
-  def clearScreen(emulator: Emulator, opCode: Short) = Nil
+  def clearScreen(emulator: Emulator, opCode: Short) = {
+    emulator.drawFlag = true
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 00EE - Returns from a subroutine.
