@@ -13,8 +13,7 @@ class Emulator {
   var soundTimer: Short = 0
   var delayTimer: Short = 0
 
-  def loadRom(fPath: String) = {
-    val rom = Files.readAllBytes(Paths.get(fPath))
+  def loadRom(rom: Array[Byte]) = {
     if (rom.length > (memory.length - 512)) throw new RomTooLargeException("Rom is too large")
 
     for ((b: Byte, idx: Int) <- rom.zipWithIndex) {

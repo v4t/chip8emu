@@ -11,6 +11,7 @@ object Main extends App {
     println("Invalid file specified")
     sys.exit()
   }
-
+  val rom = Files.readAllBytes(Paths.get(args(0)))
+  println(Paths.get(args(0)))
   println("TODO")
 }
