@@ -128,4 +128,96 @@ class InstructionSuite extends  FunSuite {
     assert(emu.registers(4) == 0x5 + 0x66)
     assert(emu.programCounter == (0x300 + 2).toShort)
   }
+
+  test("8XY0: Set VX to VY") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.registers(5) = 0x68
+
+    Instruction.setVxToVy(emu, 0x8450.toShort)
+    assert(emu.registers(4) == emu.registers(5))
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XY1: Set VX to VX | VY") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.registers(5) = 0x68
+
+    Instruction.setVxToVxOrVy(emu, 0x8451.toShort)
+    assert(emu.registers(4) == (0x5 | 0x68).toByte)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XY2: Set VX to VX & VY") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.registers(5) = 0x68
+
+    Instruction.setVxToVxAndVy(emu, 0x8452.toShort)
+    assert(emu.registers(4) == (0x5 & 0x68).toByte)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XY3: Set VX to VX ^ VY") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.registers(5) = 0x68
+
+    Instruction.setVxToVxXorVy(emu, 0x8453.toShort)
+    assert(emu.registers(4) == (0x5 ^ 0x68).toByte)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XY4: Add VY to VX (sets VF to 1 when there's a carry)") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0xaa.toByte
+    emu.registers(5) = 0xbb.toByte
+
+    Instruction.addVyToVx(emu, 0x8454.toShort)
+    assert(emu.registers(4) == (0xaa + 0xbb).toByte)
+    assert(emu.registers(15) == 1)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XY4: Add VY to VX (sets VF to 0 when there's no carry)") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.registers(5) = 0x68
+
+    Instruction.addVyToVx(emu, 0x8454.toShort)
+    assert(emu.registers(4) == (0x5 + 0x68).toByte)
+    assert(emu.registers(15) == 0)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XY5: Subtract VY from VX (sets VF to 1 when there's no borrow)") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0xaa.toByte
+    emu.registers(5) = 0x99.toByte
+
+    Instruction.subVyFromVx(emu, 0x8455.toShort)
+    assert(emu.registers(4) == (0xaa - 0x99).toByte)
+    assert(emu.registers(15) == 1)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XY5: Subtract VY from VX(sets VF to 0 when there's a borrow)") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.registers(5) = 0x68
+
+    Instruction.subVyFromVx(emu, 0x8455.toShort)
+    assert(emu.registers(4) == (0x5 - 0x68).toByte)
+    assert(emu.registers(15) == 0)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
 }
