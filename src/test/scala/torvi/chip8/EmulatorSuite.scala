@@ -21,8 +21,7 @@ class EmulatorSuite extends FunSuite {
     assert(emu.addressRegister.length == 1)
     exactly (1, emu.addressRegister) should be (0)
 
-    assert(emu.stack.length == 16)
-    exactly (16, emu.stack) should be (0)
+    assert(emu.stack.length == 0)
 
     assert(emu.keyboardInput.length == 16)
     exactly (16, emu.keyboardInput) should be (false)
