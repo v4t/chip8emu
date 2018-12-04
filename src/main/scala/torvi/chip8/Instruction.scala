@@ -27,35 +27,63 @@ object Instruction {
   /**
     * 2NNN - Calls subroutine at NNN.
     */
-  def callAddr(emulator: Emulator, opCode: Short): Unit = {}
+  def callSub(emulator: Emulator, opCode: Short): Unit = {
+    emulator.stack.push(emulator.programCounter)
+    emulator.programCounter = (opCode & 0x0fff).toShort
+  }
 
   /**
     * 3XNN - Skips the next instruction if VX equals NN.
     * (Usually the next instruction is a jump to skip a code block)
     */
-  def skipVxEqualsNn(emulator: Emulator, opCode: Short): Unit = {}
+  def skipVxEqualsNn(emulator: Emulator, opCode: Short): Unit = {
+    val vx = emulator.registers((opCode & 0x0f00) >> 8)
+    val nn = opCode & 0x00ff
+    if(vx == nn) emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 4XNN - Skips the next instruction if VX doesn't equal NN.
     * (Usually the next instruction is a jump to skip a code block)
     */
-  def skipVxNotEqualsNn(emulator: Emulator, opCode: Short): Unit = {}
+  def skipVxNotEqualsNn(emulator: Emulator, opCode: Short): Unit = {
+    val vx = emulator.registers((opCode & 0x0f00) >> 8)
+    val nn = opCode & 0x00ff
+    if(vx != nn) emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 5XY0 - Skips the next instruction if VX equals VY.
     * (Usually the next instruction is a jump to skip a code block)
     */
-  def skipVxEqualsVy(emulator: Emulator, opCode: Short): Unit = {}
+  def skipVxEqualsVy(emulator: Emulator, opCode: Short): Unit = {
+    val vx = emulator.registers((opCode & 0x0f00) >> 8)
+    val vy = emulator.registers((opCode & 0x00f0) >> 4)
+    if(vx == vy) emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 6XNN - Sets VX to NN.
     */
-  def setVxToNn(emulator: Emulator, opCode: Short): Unit = {}
+  def setVxToNn(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    val nn = opCode & 0x00ff
+    emulator.registers(x) = nn.toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 7XNN - Adds NN to VX. (Carry flag is not changed)
     */
-  def addNnToVx(emulator: Emulator, opCode: Short): Unit = {}
+  def addNnToVx(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    val nn = opCode & 0x00ff
+    emulator.registers(x) = (emulator.registers(x) + nn).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 8XY0 - Sets VX to the value of VY.
