@@ -31,6 +31,7 @@ object Instruction {
     * 2NNN - Calls subroutine at NNN.
     */
   def callSub(emulator: Emulator, opCode: Short): Unit = {
+    if(emulator.stack.length == 16) throw new StackOverflowException("Stack overflow")
     emulator.stack.push(emulator.programCounter)
     emulator.programCounter = (opCode & 0x0fff).toShort
   }
@@ -266,45 +267,87 @@ object Instruction {
     * EX9E - Skips the next instruction if the key stored in VX is pressed.
     * (Usually the next instruction is a jump to skip a code block)
     */
-  def skipVxPressed(emulator: Emulator, opCode: Short): Unit = {}
+  def skipVxPressed(emulator: Emulator, opCode: Short): Unit = {
+    val vx = emulator.registers((opCode & 0x0f00) >> 8) & 0xf
+    if(emulator.keyboardInput(vx)) emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * EXA1 - Skips the next instruction if the key stored in VX isn't pressed.
     * (Usually the next instruction is a jump to skip a code block)
     */
-  def skipVxNotPressed(emulator: Emulator, opCode: Short): Unit = {}
+  def skipVxNotPressed(emulator: Emulator, opCode: Short): Unit = {
+    val vx = emulator.registers((opCode & 0x0f00) >> 8) & 0xf
+    if(!emulator.keyboardInput(vx)) emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * FX07 - Sets VX to the value of the delay timer.
     */
-  def setVxToDelayTimerValue(emulator: Emulator, opCode: Short): Unit = {}
+  def setVxToDelayTimerValue(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    emulator.registers(x) = emulator.delayTimer
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * FX0A - A key press is awaited, and then stored in VX.
     * (Blocking Operation. All instruction halted until next key event)
     */
-  def waitForKeyPress(emulator: Emulator, opCode: Short): Unit = {}
+  def waitForKeyPress(emulator: Emulator, opCode: Short): Unit = {
+    val keyPressed = emulator.keyboardInput.indexWhere(_ == true)
+    if(keyPressed == -1) return
+
+    val x = (opCode & 0x0f00) >> 8
+    emulator.registers(x) = keyPressed.toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * FX15 - Sets the delay timer to VX.
     */
-  def setDelayTimerValueToVx(emulator: Emulator, opCode: Short): Unit = {}
+  def setDelayTimerValueToVx(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    emulator.delayTimer = emulator.registers(x)
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
-    * FX18 - Sets the delay timer to VX.
+    * FX18 - Sets the sound timer to VX.
     */
-  def setSoundTimerValueToVx(emulator: Emulator, opCode: Short): Unit = {}
+  def setSoundTimerValueToVx(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    emulator.soundTimer = emulator.registers(x)
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * FX1E - Adds VX to I.
     */
-  def addVxToAddrReg(emulator: Emulator, opCode: Short): Unit = {}
+  def addVxToAddrReg(emulator: Emulator, opCode: Short): Unit = {
+    val intVx = emulator.registers((opCode & 0x0f00) >> 8) & 0xff
+    val intAddrReg = emulator.addressRegister & 0xff
+
+    if (intAddrReg > (0xff - intVx)) emulator.registers(15) = 1
+    else emulator.registers(15) = 0
+
+    emulator.addressRegister = (intVx + intAddrReg).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * FX29 - Sets I to the location of the sprite for the character in VX.
     * Characters 0-F (in hexadecimal) are represented by a 4x5 font.
     */
-  def setAddrRegToSpriteAddr(emulator: Emulator, opCode: Short): Unit = {}
+  def setAddrRegToSpriteAddr(emulator: Emulator, opCode: Short): Unit = {
+    val vx = emulator.registers((opCode & 0x0f00) >> 8)
+
+    emulator.addressRegister =
+      (emulator.spriteStartAddr + (vx * emulator.spriteLength)).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * FX33 - Stores the binary-coded decimal representation of VX,
@@ -314,21 +357,39 @@ object Instruction {
     * place the hundreds digit in memory at location in I, the tens digit
     * at location I+1, and the ones digit at location I+2.)
     */
-  def storeBcdForVx(emulator: Emulator, opCode: Short): Unit = {}
+  def storeBcdForVx(emulator: Emulator, opCode: Short): Unit = {
+    val vx = emulator.registers((opCode & 0x0f00) >> 8) & 0xff
+    val i = emulator.addressRegister
+    emulator.memory(i) = (vx / 100).toByte
+    emulator.memory(i+1) =((vx / 10) % 10).toByte
+    emulator.memory(i+2) =((vx % 100) % 10).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * FX55 - Stores V0 to VX (including VX) in memory starting at address I.
     * The offset from I is increased by 1 for each value written, but I itself
     * is left unmodified.
     */
-  def regDump(emulator: Emulator, opCode: Short): Unit = {}
+  def regDump(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    (0 to x).foreach(i =>
+      emulator.memory(emulator.addressRegister + i) = emulator.registers(i)
+    )
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * FX65 - Fills V0 to VX (including VX) with values from memory starting at
     * address I. The offset from I is increased by 1 for each value written,
     * but I itself is left unmodified.
     */
-  def regLoad(emulator: Emulator, opCode: Short): Unit = {}
+  def regLoad(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    (0 to x).foreach(i =>
+      emulator.registers(i) = emulator.memory(emulator.addressRegister + i)
+    )
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
 }
-

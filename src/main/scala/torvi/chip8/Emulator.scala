@@ -10,9 +10,12 @@ class Emulator {
   var addressRegister: Short = 0
   var stackPointer: Short = 0
   var programCounter: Short = 0x200
-  var soundTimer: Short = 0
-  var delayTimer: Short = 0
+  var soundTimer: Byte = 0
+  var delayTimer: Byte = 0
   var drawFlag = true
+
+  val spriteStartAddr: Byte = 0
+  val spriteLength: Byte = 5
 
   def loadRom(rom: Array[Byte]) = {
     if (rom.length > (memory.length - 512)) throw new RomTooLargeException("Rom is too large")
