@@ -308,4 +308,49 @@ class InstructionSuite extends  FunSuite {
     Instruction.skipVxNotEqualsVy(emu, 0x9450.toShort)
     assert(emu.programCounter == (0x300 + 2).toShort)
   }
+
+  test("ANNN: set address register to NNN") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+
+    Instruction.setAddrRegToNn(emu, 0xabcd.toShort)
+    assert(emu.addressRegister == 0xbcd)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("BNNN: Jump to address NNN + V0") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(0) = 0x5
+
+    Instruction.jumpToAddrPlusV0(emu, 0xb123.toShort)
+    assert(emu.programCounter == (0x123 + 0x5).toShort)
+  }
+
+  test("CXNN: Set VX to random number & NN") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+
+    Instruction.setVxToRand(emu, 0xc400.toShort)
+    assert(emu.registers(4) != 0x5)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+
+    val cur = emu.registers(4)
+    Instruction.setVxToRand(emu, 0xc4ff.toShort)
+    assert(emu.registers(4) != cur)
+    assert(emu.programCounter == (0x300 + 4).toShort)
+  }
+
+  test("DXYN: Draw sprite at coordinate VX, VY") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.drawFlag = false
+    emu.registers(4) = 0x5
+    emu.registers(5) = 0x5
+
+    Instruction.drawVxVyN(emu, 0xd458.toShort)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+    assert(emu.drawFlag == true)
+  }
 }
