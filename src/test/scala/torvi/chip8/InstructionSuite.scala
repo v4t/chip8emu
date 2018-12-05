@@ -349,7 +349,7 @@ class InstructionSuite extends  FunSuite {
     val cur = emu.registers(4)
     Instruction.setVxToRand(emu, 0xc4ff.toShort)
     assert(emu.registers(4) != cur)
-    assert(emu.programCounter == (0x300 + 4).toShort)
+    assert(emu.programCounter == (0x300 + 4).toShort) // this check might fail
   }
 
   test("DXYN: Draw sprite at coordinate VX, VY") {
