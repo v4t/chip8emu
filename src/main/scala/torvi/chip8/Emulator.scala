@@ -6,8 +6,8 @@ class Emulator {
   val memory: Array[Byte] = Array.fill[Byte](4096)(0)
   val stack = Stack[Short]()
   val registers: Array[Byte] = Array.fill[Byte](16)(0)
-  val addressRegister: Array[Short] = Array.fill[Short](1)(0)
   val keyboardInput: Array[Boolean] = Array.fill[Boolean](16)(false)
+  var addressRegister: Short = 0
   var stackPointer: Short = 0
   var programCounter: Short = 0x200
   var soundTimer: Short = 0

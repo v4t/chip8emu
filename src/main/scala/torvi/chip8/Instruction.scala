@@ -1,6 +1,9 @@
 package torvi.chip8
 
 object Instruction {
+
+  val rng = new scala.util.Random(System.currentTimeMillis())
+
   /**
     * 00E0 - Clears the screen.
     */
@@ -40,7 +43,7 @@ object Instruction {
     val vx = emulator.registers((opCode & 0x0f00) >> 8)
     val nn = opCode & 0x00ff
 
-    if(vx == nn) emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (vx == nn) emulator.programCounter = (emulator.programCounter + 2).toShort
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
 
@@ -52,7 +55,7 @@ object Instruction {
     val vx = emulator.registers((opCode & 0x0f00) >> 8)
     val nn = opCode & 0x00ff
 
-    if(vx != nn) emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (vx != nn) emulator.programCounter = (emulator.programCounter + 2).toShort
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
 
@@ -63,7 +66,7 @@ object Instruction {
   def skipVxEqualsVy(emulator: Emulator, opCode: Short): Unit = {
     val vx = emulator.registers((opCode & 0x0f00) >> 8)
     val vy = emulator.registers((opCode & 0x00f0) >> 4)
-    if(vx == vy) emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (vx == vy) emulator.programCounter = (emulator.programCounter + 2).toShort
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
 
@@ -139,7 +142,7 @@ object Instruction {
     val intVx = emulator.registers(x) & 0xff
     val intVy = emulator.registers((opCode & 0x00f0) >> 4) & 0xff
 
-    if(intVy > (0xff - intVx)) emulator.registers(15) = 1
+    if (intVy > (0xff - intVx)) emulator.registers(15) = 1
     else emulator.registers(15) = 0
 
     emulator.registers(x) = (intVx + intVy).toByte
@@ -155,7 +158,7 @@ object Instruction {
     val intVx = emulator.registers(x) & 0xff
     val intVy = emulator.registers((opCode & 0x00f0) >> 4) & 0xff
 
-    if(intVy > intVx) emulator.registers(15) = 0
+    if (intVy > intVx) emulator.registers(15) = 0
     else emulator.registers(15) = 1
 
     emulator.registers(x) = (intVx - intVy).toByte
@@ -182,7 +185,7 @@ object Instruction {
     val intVx = emulator.registers(x) & 0xff
     val intVy = emulator.registers((opCode & 0x00f0) >> 4) & 0xff
 
-    if(intVx > intVy) emulator.registers(15) = 0
+    if (intVx > intVy) emulator.registers(15) = 0
     else emulator.registers(15) = 1
 
     emulator.registers(x) = (intVy - intVx).toByte
@@ -208,25 +211,37 @@ object Instruction {
     val vx = emulator.registers((opCode & 0x0f00) >> 8)
     val vy = emulator.registers((opCode & 0x00f0) >> 4)
 
-    if(vx != vy) emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (vx != vy) emulator.programCounter = (emulator.programCounter + 2).toShort
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
 
   /**
     * ANNN - Sets I to the address NNN.
     */
-  def setAddrRegToNn(emulator: Emulator, opCode: Short): Unit = {}
+  def setAddrRegToNn(emulator: Emulator, opCode: Short): Unit = {
+    emulator.addressRegister = (opCode & 0x0fff).toShort
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * BNNN - Jumps to the address NNN plus V0.
     */
-  def jumpToAddrPlusV0(emulator: Emulator, opCode: Short): Unit = {}
+  def jumpToAddrPlusV0(emulator: Emulator, opCode: Short): Unit = {
+    emulator.programCounter = ((opCode & 0x0fff) + emulator.registers(0)).toShort
+  }
 
   /**
     * CXNN - ets VX to the result of a bitwise and operation on a random number
     * (Typically: 0 to 255) and NN.
     */
-  def setVxToRand(emulator: Emulator, opCode: Short): Unit = {}
+  def setVxToRand(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    val nn = opCode & 0x00ff
+    val randomValue = 0 + rng.nextInt((255 - 0) + 1)
+
+    emulator.registers(x) = (randomValue & nn).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * DXYN - Draws a sprite at coordinate (VX, VY) that has a
@@ -237,8 +252,15 @@ object Instruction {
     * screen pixels are flipped from set to unset when the sprite
     * is drawn, and to 0 if that doesn’t happen
     */
-  def drawVxVyN(emulator: Emulator, opCode: Short): Unit = {}
+  def drawVxVyN(emulator: Emulator, opCode: Short): Unit = {
+    val vx = emulator.registers((opCode & 0x0f00) >> 8)
+    val vy = emulator.registers((opCode & 0x00f0) >> 4)
+    val n = opCode & 0x000f
 
+    /* TODO draw logic */
+    emulator.drawFlag = true
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * EX9E - Skips the next instruction if the key stored in VX is pressed.
@@ -262,6 +284,7 @@ object Instruction {
     * (Blocking Operation. All instruction halted until next key event)
     */
   def waitForKeyPress(emulator: Emulator, opCode: Short): Unit = {}
+
   /**
     * FX15 - Sets the delay timer to VX.
     */
