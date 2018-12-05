@@ -1,29 +1,50 @@
 package torvi
 
-import java.nio.file.{Files, Paths}
-
+import scalafx.Includes._
+import scalafx.animation.KeyFrame
+import scalafx.animation.Timeline
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
-import scalafx.scene.{Scene}
+import scalafx.event.ActionEvent
+import scalafx.scene.layout.BorderPane
 import scalafx.scene.paint.Color._
+import scalafx.scene.{Group, Scene}
+import scalafx.util.Duration
 
 object Main extends JFXApp {
-  def exitWithError(err: String) = {
-    println(err)
-    sys.exit(0)
-  }
-  if (parameters.unnamed.length == 0)
-    exitWithError("Please provide ROM")
-  if (!Files.exists(Paths.get(parameters.unnamed(0))))
-    exitWithError("Given ROM file does not exist")
 
-  val rom = parameters.unnamed(0)
+  val rnd = new scala.util.Random()
+  val s1 = 0
+  val e1 = 63
+  val s2 = 0
+  val e2 = 31
+
+  val cellCanvas = new ScreenCanvas
+  cellCanvas.initEventHandlers()
   stage = new PrimaryStage {
-    title = "C8Emu"
-    width = 650
-    height = 450
+
+    title = "CH8Emu"
+    resizable = false
+
     scene = new Scene {
       fill = Black
+
+      root = new BorderPane {
+        val timeline = new Timeline {
+          cycleCount = Timeline.Indefinite
+          keyFrames = KeyFrame(Duration(60), onFinished = (e: ActionEvent) => {
+            cellCanvas.clear()
+            cellCanvas.setPixels(s1 + rnd.nextInt((e1 - s1) + 1), s2 + rnd.nextInt((e2 - s2) + 1))
+          })
+        }
+        timeline.play()
+
+        center = new Group {
+          cellCanvas.width <== 640
+          cellCanvas.height <== 320
+          children = cellCanvas
+        }
+      }
     }
   }
 }
