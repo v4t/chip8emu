@@ -39,6 +39,7 @@ object Instruction {
   def skipVxEqualsNn(emulator: Emulator, opCode: Short): Unit = {
     val vx = emulator.registers((opCode & 0x0f00) >> 8)
     val nn = opCode & 0x00ff
+
     if(vx == nn) emulator.programCounter = (emulator.programCounter + 2).toShort
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
@@ -50,6 +51,7 @@ object Instruction {
   def skipVxNotEqualsNn(emulator: Emulator, opCode: Short): Unit = {
     val vx = emulator.registers((opCode & 0x0f00) >> 8)
     val nn = opCode & 0x00ff
+
     if(vx != nn) emulator.programCounter = (emulator.programCounter + 2).toShort
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
@@ -136,6 +138,7 @@ object Instruction {
     val x = (opCode & 0x0f00) >> 8
     val intVx = emulator.registers(x) & 0xff
     val intVy = emulator.registers((opCode & 0x00f0) >> 4) & 0xff
+
     if(intVy > (0xff - intVx)) emulator.registers(15) = 1
     else emulator.registers(15) = 0
 
@@ -151,6 +154,7 @@ object Instruction {
     val x = (opCode & 0x0f00) >> 8
     val intVx = emulator.registers(x) & 0xff
     val intVy = emulator.registers((opCode & 0x00f0) >> 4) & 0xff
+
     if(intVy > intVx) emulator.registers(15) = 0
     else emulator.registers(15) = 1
 
@@ -162,25 +166,51 @@ object Instruction {
     * 8XY6 - Stores the least significant bit of VX in VF
     * and then shifts VX to the right by 1.
     */
-  def shiftRightVx(emulator: Emulator, opCode: Short): Unit = {}
+  def shiftRightVx(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    emulator.registers(15) = (emulator.registers(x) & 0x1).toByte
+    emulator.registers(x) = (emulator.registers(x) >> 1).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 8XY7 - Sets VX to VY minus VX. VF is set to 0 when there's a borrow,
     * and 1 when there isn't.
     */
-  def setVxToVyMinusVx(emulator: Emulator, opCode: Short): Unit = {}
+  def setVxToVyMinusVx(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    val intVx = emulator.registers(x) & 0xff
+    val intVy = emulator.registers((opCode & 0x00f0) >> 4) & 0xff
+
+    if(intVx > intVy) emulator.registers(15) = 0
+    else emulator.registers(15) = 1
+
+    emulator.registers(x) = (intVy - intVx).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 8XYE - Stores the most significant bit of VX in VF
     * and then shifts VX to the left by 1.
     */
-  def shiftLeftVx(emulator: Emulator, opCode: Short): Unit = {}
+  def shiftLeftVx(emulator: Emulator, opCode: Short): Unit = {
+    val x = (opCode & 0x0f00) >> 8
+    emulator.registers(15) = (emulator.registers(x) >> 7 & 0x1).toByte
+    emulator.registers(x) = (emulator.registers(x) << 1).toByte
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * 9XY0 - Skips the next instruction if VX doesn't equal VY.
     * (Usually the next instruction is a jump to skip a code block)
     */
-  def skipVxNotEqualsVy(emulator: Emulator, opCode: Short): Unit = {}
+  def skipVxNotEqualsVy(emulator: Emulator, opCode: Short): Unit = {
+    val vx = emulator.registers((opCode & 0x0f00) >> 8)
+    val vy = emulator.registers((opCode & 0x00f0) >> 4)
+
+    if(vx != vy) emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.programCounter = (emulator.programCounter + 2).toShort
+  }
 
   /**
     * ANNN - Sets I to the address NNN.
