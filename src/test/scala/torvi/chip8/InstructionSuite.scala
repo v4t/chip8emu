@@ -27,7 +27,7 @@ class InstructionSuite extends  FunSuite {
     assert(emu.stack.isEmpty)
   }
 
-  test("00EE: Return from subroutine throws error if stack underflow") {
+  test("00EE: Return from subroutine throws error if stack is empty") {
     val emu = new Emulator()
 
     assertThrows[StackUnderflowException]{
@@ -51,6 +51,16 @@ class InstructionSuite extends  FunSuite {
     assert(emu.stack.length == 1)
     assert(emu.stack.pop() == 0x300)
     assert(emu.programCounter == 0x234.toShort)
+  }
+
+  test("2NNN: Call subroutine throws error if stack overflows") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    (0 to 15).foreach(_ => Instruction.callSub(emu, 0x2234))
+
+    assertThrows[StackOverflowException]{
+      Instruction.callSub(emu, 0x2234)
+    }
   }
 
   test("3XNN: Skips next instruction if VX equals NN") {
@@ -351,6 +361,167 @@ class InstructionSuite extends  FunSuite {
 
     Instruction.drawVxVyN(emu, 0xd458.toShort)
     assert(emu.programCounter == (0x300 + 2).toShort)
-    assert(emu.drawFlag == true)
+    assert(emu.drawFlag)
+  }
+
+  test("EX9E: Skip next instruction if key stored in VX is pressed") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.keyboardInput(5) = true
+
+    Instruction.skipVxPressed(emu, 0xe49e.toShort)
+    assert(emu.programCounter == (0x300 + 4).toShort)
+  }
+
+  test("EX9E: Don't skip next instruction if key stored in VX is not pressed") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.keyboardInput(5) = false
+
+    Instruction.skipVxPressed(emu, 0xe49e.toShort)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("EXA1: Skip next instruction if key stored in VX is not pressed") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.keyboardInput(5) = false
+
+    Instruction.skipVxNotPressed(emu, 0xe4a1.toShort)
+    assert(emu.programCounter == (0x300 + 4).toShort)
+  }
+
+  test("EXA1: Don't skip next instruction if key stored in VX is pressed") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.keyboardInput(5) = true
+
+    Instruction.skipVxNotPressed(emu, 0xe4a1.toShort)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("FX07: Set VX to value of delay timer") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.delayTimer = 0x11
+
+    Instruction.setVxToDelayTimerValue(emu, 0xf407.toShort)
+    assert(emu.registers(4) == 0x11)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("FX0A: Await for key press and store key to VX") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0
+    emu.delayTimer = 0x99.toByte
+
+    Instruction.waitForKeyPress(emu, 0xf40a.toShort)
+    assert(emu.registers(4) == 0)
+    assert(emu.programCounter == 0x300.toShort)
+
+    emu.keyboardInput(5) = true
+    Instruction.waitForKeyPress(emu, 0xf40a.toShort)
+    assert(emu.registers(4) == 5)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("FX15: Set delay timer to VX") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.delayTimer = 0x11
+
+    Instruction.setDelayTimerValueToVx(emu, 0xf415.toShort)
+    assert(emu.delayTimer == 0x5)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("FX18: Set sound timer to VX") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.soundTimer = 0x11
+
+    Instruction.setSoundTimerValueToVx(emu, 0xf418.toShort)
+    assert(emu.soundTimer == 0x5)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("FX1E: Adds VX to address register (sets VF to 1 when there's a carry)") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0xaa.toByte
+    emu.addressRegister = 0xbb.toByte
+
+    Instruction.addVxToAddrReg(emu, 0xf41e.toShort)
+    assert(emu.addressRegister == (0xaa + 0xbb).toByte)
+    assert(emu.registers(15) == 1)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("FX1E: Adds VX to address register (sets VF to 0 when there's no carry)") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.addressRegister = 0x6.toByte
+
+    Instruction.addVxToAddrReg(emu, 0xf41e.toShort)
+    assert(emu.addressRegister == (0x5 + 0x6).toByte)
+    assert(emu.registers(15) == 0)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("FX33: Store binary-coded decimal representation of VX to I, I+1 and I+2") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 172.toByte
+    emu.addressRegister = 0x987
+
+    Instruction.storeBcdForVx(emu, 0xf433.toShort)
+    assert(emu.memory(0x987) == 1)
+    assert(emu.memory(0x988) == 7)
+    assert(emu.memory(0x989) == 2)
+    assert(emu.addressRegister == 0x987)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("FX55: Store V0 to VX in memory starting at address register value") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(0) = 0x25.toByte
+    emu.registers(2) = 0xff.toByte
+    emu.registers(3) = 0x12.toByte
+    emu.addressRegister = 0x983
+
+    Instruction.regDump(emu, 0xf355.toShort)
+    assert(emu.memory(0x983) == 0x25.toByte)
+    assert(emu.memory(0x984) == 0.toByte)
+    assert(emu.memory(0x985) == 0xff.toByte)
+    assert(emu.memory(0x986) == 0x12.toByte)
+    assert(emu.addressRegister == 0x983)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("FX65: Fill V0 to VX with values from memory starting at address register") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.memory(0x983) = 0x25.toByte
+    emu.memory(0x985) = 0xff.toByte
+    emu.memory(0x986) = 0x12.toByte
+    emu.addressRegister = 0x983
+
+    Instruction.regLoad(emu, 0xf355.toShort)
+    assert(emu.registers(0) == 0x25.toByte)
+    assert(emu.registers(1) == 0.toByte)
+    assert(emu.registers(2) == 0xff.toByte)
+    assert(emu.registers(3) == 0x12.toByte)
+    assert(emu.addressRegister == 0x983)
+    assert(emu.programCounter == (0x300 + 2).toShort)
   }
 }
