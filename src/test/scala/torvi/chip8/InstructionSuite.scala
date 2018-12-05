@@ -220,4 +220,92 @@ class InstructionSuite extends  FunSuite {
     assert(emu.registers(15) == 0)
     assert(emu.programCounter == (0x300 + 2).toShort)
   }
+
+  test("8XY6: Store least significant bit (1) to VF and right shift VX by one") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5.toByte
+
+    Instruction.shiftRightVx(emu, 0x8456.toShort)
+    assert(emu.registers(4) == (0x5 >> 1).toByte)
+    assert(emu.registers(15) == 1)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XY6: Store least significant bit (0) to VF and right shift VX by one") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x4.toByte
+
+    Instruction.shiftRightVx(emu, 0x8456.toShort)
+    assert(emu.registers(4) == (0x4 >> 1).toByte)
+    assert(emu.registers(15) == 0)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XY7: Set VX to VY - VX and set VF to 0 when there is a borrow") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5.toByte
+    emu.registers(5) = 0x3.toByte
+
+    Instruction.setVxToVyMinusVx(emu, 0x8457.toShort)
+    assert(emu.registers(4) == (0x3 - 0x5).toByte)
+    assert(emu.registers(15) == 0)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XY7: Set VX to VY - VX and set VF to 1 when there is no borrow") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x4.toByte
+    emu.registers(5) = 0x7.toByte
+
+    Instruction.setVxToVyMinusVx(emu, 0x8457.toShort)
+    assert(emu.registers(4) == (0x7 - 0x4).toByte)
+    assert(emu.registers(15) == 1)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XYE: Store most significant bit (1) to VF and left shift VX by one") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0xaa.toByte
+
+    Instruction.shiftLeftVx(emu, 0x845e.toShort)
+    assert(emu.registers(4) == (0xaa << 1).toByte)
+    assert(emu.registers(15) == 1)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("8XYE: Store most significant bit (0) to VF and left shift VX by one") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x4.toByte
+
+    Instruction.shiftLeftVx(emu, 0x845e.toShort)
+    assert(emu.registers(4) == (0x4 << 1).toByte)
+    assert(emu.registers(15) == 0)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
+
+  test("9XY0: Skips next instruction if VX does not equal VY") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x5
+    emu.registers(5) = 0x6
+
+    Instruction.skipVxNotEqualsVy(emu, 0x9450.toShort)
+    assert(emu.programCounter == (0x300 + 4).toShort)
+  }
+
+  test("9XY0: Doesn't skip next instruction if VX equals VY") {
+    val emu = new Emulator()
+    emu.programCounter = 0x300
+    emu.registers(4) = 0x7
+    emu.registers(5) = 0x7
+
+    Instruction.skipVxNotEqualsVy(emu, 0x9450.toShort)
+    assert(emu.programCounter == (0x300 + 2).toShort)
+  }
 }
