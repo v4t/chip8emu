@@ -1,5 +1,6 @@
 package torvi
 
+import java.nio.file.{Files, Paths}
 import scalafx.Includes._
 import scalafx.animation.KeyFrame
 import scalafx.animation.Timeline
@@ -12,6 +13,19 @@ import scalafx.scene.{Group, Scene}
 import scalafx.util.Duration
 
 object Main extends JFXApp {
+
+//  if(args.length != 1) {
+//    println("Usage: /path/to/rom.ch8")
+//    sys.exit()
+//  }
+//  if(!Files.exists(Paths.get(args(0)))) {
+//    println("Invalid file specified")
+//    sys.exit()
+//  }
+//  val rom = Files.readAllBytes(Paths.get(args(0)))
+//
+//  println(Paths.get(args(0)))
+//  println("TODO")
 
   val rnd = new scala.util.Random()
   val s1 = 0

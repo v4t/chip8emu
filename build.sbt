@@ -4,7 +4,8 @@ version := "0.1"
 
 scalaVersion := "2.12.7"
 
-// Add dependency on ScalaFX library
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+
 libraryDependencies += "org.scalafx" %% "scalafx" % "11-R16"
 
 // Determine OS version of JavaFX binaries
