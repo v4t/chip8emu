@@ -1,6 +1,7 @@
 package torvi.chip8
 
 import org.scalatest.FunSuite
+import org.scalatest.Matchers._
 
 class InstructionSuite extends  FunSuite {
 
@@ -8,9 +9,11 @@ class InstructionSuite extends  FunSuite {
     val emu = new Emulator()
     emu.programCounter = 0x259
     emu.drawFlag = false
+    emu.screenPixels(0) = true
+    emu.screenPixels(12) = true
 
     Instruction.clearScreen(emu, 0x00e0)
-
+    exactly(emu.screenWidth * emu.screenHeight, emu.screenPixels) should be(false)
     assert(emu.programCounter == (0x259 + 2).toShort)
     assert(emu.drawFlag)
   }
@@ -222,12 +225,14 @@ class InstructionSuite extends  FunSuite {
   test("8XY5: Subtract VY from VX(sets VF to 0 when there's a borrow)") {
     val emu = new Emulator()
     emu.programCounter = 0x300
+    emu.addressRegister = 0x980
     emu.registers(4) = 0x5
     emu.registers(5) = 0x68
 
     Instruction.subVyFromVx(emu, 0x8455.toShort)
     assert(emu.registers(4) == (0x5 - 0x68).toByte)
     assert(emu.registers(15) == 0)
+    assert(emu.addressRegister == 0x980)
     assert(emu.programCounter == (0x300 + 2).toShort)
   }
 
@@ -352,17 +357,85 @@ class InstructionSuite extends  FunSuite {
     assert(emu.programCounter == (0x300 + 4).toShort) // this check might fail
   }
 
-  test("DXYN: Draw sprite at coordinate VX, VY") {
+  test("DXYN: Draw sprite at coordinate VX, VY. VF is left unset because no pixels are flipped") {
     val emu = new Emulator()
-    emu.programCounter = 0x300
+    emu.programCounter = 0x600
     emu.drawFlag = false
-    emu.registers(4) = 0x5
-    emu.registers(5) = 0x5
+    emu.registers(4) = 0x0
+    emu.registers(5) = 0x0
+    emu.addressRegister = 0x800
 
-    Instruction.drawVxVyN(emu, 0xd458.toShort)
-    assert(emu.programCounter == (0x300 + 2).toShort)
+    emu.memory(0x800) = 48 // 00110000
+    emu.memory(0x801) = 1  // 00000001
+
+    Instruction.drawVxVyN(emu, 0xd452.toShort)
+
+    // first row of sprite should be 00110000
+    assert(!emu.screenPixels(0))
+    assert(!emu.screenPixels(1))
+    assert(emu.screenPixels(2))
+    assert(emu.screenPixels(3))
+    assert(!emu.screenPixels(4))
+    assert(!emu.screenPixels(5))
+    assert(!emu.screenPixels(6))
+    assert(!emu.screenPixels(7))
+
+    // second row of sprite 00000001
+    assert(!emu.screenPixels(0 + 64))
+    assert(!emu.screenPixels(1 + 64))
+    assert(!emu.screenPixels(2 + 64))
+    assert(!emu.screenPixels(3 + 64))
+    assert(!emu.screenPixels(4 + 64))
+    assert(!emu.screenPixels(5 + 64))
+    assert(!emu.screenPixels(6 + 64))
+    assert(emu.screenPixels(7 + 64))
+
+    // rest of emulator state
+    assert(emu.programCounter == (0x600 + 2).toShort)
+    assert(emu.registers(15) == 0)
     assert(emu.drawFlag)
   }
+
+  test("DXYN: Draw sprite at coordinate VX, VY. VF is set to 1 because pixel was flipped") {
+    val emu = new Emulator()
+    emu.programCounter = 0x600
+    emu.drawFlag = false
+    emu.registers(4) = 0x0
+    emu.registers(5) = 0x0
+    emu.addressRegister = 0x800
+
+    emu.screenPixels(2) = true
+    emu.memory(0x800) = 48 // 00110000
+    emu.memory(0x801) = 1  // 00000001
+
+    Instruction.drawVxVyN(emu, 0xd452.toShort)
+
+    // first row of sprite should be 00010000
+    assert(!emu.screenPixels(0))
+    assert(!emu.screenPixels(1))
+    assert(!emu.screenPixels(2)) // flipped pixel
+    assert(emu.screenPixels(3))
+    assert(!emu.screenPixels(4))
+    assert(!emu.screenPixels(5))
+    assert(!emu.screenPixels(6))
+    assert(!emu.screenPixels(7))
+
+    // second row of sprite 00000001
+    assert(!emu.screenPixels(0 + 64))
+    assert(!emu.screenPixels(1 + 64))
+    assert(!emu.screenPixels(2 + 64))
+    assert(!emu.screenPixels(3 + 64))
+    assert(!emu.screenPixels(4 + 64))
+    assert(!emu.screenPixels(5 + 64))
+    assert(!emu.screenPixels(6 + 64))
+    assert(emu.screenPixels(7 + 64))
+
+    // rest of emulator state
+    assert(emu.programCounter == (0x600 + 2).toShort)
+    assert(emu.registers(15) == 1)
+    assert(emu.drawFlag)
+  }
+
 
   test("EX9E: Skip next instruction if key stored in VX is pressed") {
     val emu = new Emulator()

@@ -8,6 +8,9 @@ object Instruction {
     * 00E0 - Clears the screen.
     */
   def clearScreen(emulator: Emulator, opCode: Short): Unit = {
+    val screenSize = emulator.screenPixels.length - 1
+    (0 to screenSize).foreach(i => emulator.screenPixels(i) = false)
+
     emulator.drawFlag = true
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
@@ -31,7 +34,7 @@ object Instruction {
     * 2NNN - Calls subroutine at NNN.
     */
   def callSub(emulator: Emulator, opCode: Short): Unit = {
-    if(emulator.stack.length == 16) throw new StackOverflowException("Stack overflow")
+    if (emulator.stack.length == 16) throw new StackOverflowException("Stack overflow")
     emulator.stack.push(emulator.programCounter)
     emulator.programCounter = (opCode & 0x0fff).toShort
   }
@@ -257,8 +260,18 @@ object Instruction {
     val vx = emulator.registers((opCode & 0x0f00) >> 8)
     val vy = emulator.registers((opCode & 0x00f0) >> 4)
     val n = opCode & 0x000f
-
     /* TODO draw logic */
+    for (yLine <- 0 until n) {
+      val pixel = emulator.memory(emulator.addressRegister + yLine)
+      for (xLine <- 0 until 8) {
+        if ((pixel & (0x80 >> xLine)) != 0) {
+          val pixelPos = vx + xLine + ((vy + yLine) * emulator.screenWidth)
+          if(emulator.screenPixels(pixelPos)) emulator.registers(15) = 1
+          emulator.screenPixels(pixelPos) = !emulator.screenPixels(pixelPos)
+        }
+      }
+    }
+
     emulator.drawFlag = true
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
@@ -269,7 +282,7 @@ object Instruction {
     */
   def skipVxPressed(emulator: Emulator, opCode: Short): Unit = {
     val vx = emulator.registers((opCode & 0x0f00) >> 8) & 0xf
-    if(emulator.keyboardInput(vx)) emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (emulator.keyboardInput(vx)) emulator.programCounter = (emulator.programCounter + 2).toShort
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
 
@@ -279,7 +292,7 @@ object Instruction {
     */
   def skipVxNotPressed(emulator: Emulator, opCode: Short): Unit = {
     val vx = emulator.registers((opCode & 0x0f00) >> 8) & 0xf
-    if(!emulator.keyboardInput(vx)) emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (!emulator.keyboardInput(vx)) emulator.programCounter = (emulator.programCounter + 2).toShort
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
 
@@ -298,7 +311,7 @@ object Instruction {
     */
   def waitForKeyPress(emulator: Emulator, opCode: Short): Unit = {
     val keyPressed = emulator.keyboardInput.indexWhere(_ == true)
-    if(keyPressed == -1) return
+    if (keyPressed == -1) return
 
     val x = (opCode & 0x0f00) >> 8
     emulator.registers(x) = keyPressed.toByte
@@ -361,8 +374,8 @@ object Instruction {
     val vx = emulator.registers((opCode & 0x0f00) >> 8) & 0xff
     val i = emulator.addressRegister
     emulator.memory(i) = (vx / 100).toByte
-    emulator.memory(i+1) =((vx / 10) % 10).toByte
-    emulator.memory(i+2) =((vx % 100) % 10).toByte
+    emulator.memory(i + 1) = ((vx / 10) % 10).toByte
+    emulator.memory(i + 2) = ((vx % 100) % 10).toByte
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
 
