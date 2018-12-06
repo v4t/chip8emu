@@ -15,6 +15,9 @@ class Emulator {
   var drawFlag = true
   val spriteStartAddr: Byte = 0
   val spriteLength: Byte = 5
+  val screenWidth = 64
+  val screenHeight = 32
+  val screenPixels: Array[Boolean] = Array.fill[Boolean](screenWidth * screenHeight)(false)
 
   initFontSet()
 
@@ -119,6 +122,17 @@ class Emulator {
     if (intTimer > 0) {
       if (intTimer == 1) println("beep")
       soundTimer = (intTimer - 1).toByte
+    }
+  }
+
+  def debugScreen(): Unit = {
+    for(row <- 0 until 32){
+      for(col <- 0 until 64) {
+        val i = row*64 + col
+        val pixel = if(screenPixels(i)) 1 else 0
+        print(pixel + " ")
+      }
+      println()
     }
   }
 }
