@@ -4,14 +4,14 @@ import scala.collection.mutable.Stack
 
 class Emulator {
   val memory: Array[Byte] = Array.fill[Byte](4096)(0)
-  val stack = Stack[Short]()
+  val stack = Stack[Int]()
   val registers: Array[Byte] = Array.fill[Byte](16)(0)
   val keyboardInput: Array[Boolean] = Array.fill[Boolean](16)(false)
-  var addressRegister: Short = 0
-  var stackPointer: Short = 0
-  var programCounter: Short = 0x200
-  var soundTimer: Byte = 0
-  var delayTimer: Byte = 0
+  var addressRegister: Int = 0
+  var stackPointer: Int = 0
+  var programCounter: Int = 0x200
+  var soundTimer: Int = 0
+  var delayTimer: Int = 0
   var drawFlag = true
   val spriteStartAddr: Byte = 0
   val spriteLength: Byte = 5
@@ -54,7 +54,7 @@ class Emulator {
   }
 
   def executeCycle(): Unit = {
-    val opCode = ((memory(programCounter) << 8) | (memory(programCounter + 1) & 0x00FF)).toShort
+    val opCode = (memory(programCounter) << 8) | (memory(programCounter + 1) & 0x00FF)
     opCode & 0xf000 match {
       case 0x0000 =>
         opCode & 0x00ff match {
@@ -124,6 +124,10 @@ class Emulator {
       soundTimer = (intTimer - 1).toByte
     }
   }
+
+  def getRegisterValue(x: Int): Int = return registers(x) & 0xff
+
+  def setRegisterValue(x: Int, value: Int): Unit = registers(x) = value.toByte
 
   def debugScreen(): Unit = {
     for(row <- 0 until 32){

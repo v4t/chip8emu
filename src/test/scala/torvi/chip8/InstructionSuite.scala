@@ -530,10 +530,10 @@ class InstructionSuite extends  FunSuite {
     val emu = new Emulator()
     emu.programCounter = 0x300
     emu.registers(4) = 0xaa.toByte
-    emu.addressRegister = 0xbb.toByte
+    emu.addressRegister = 0xffb
 
     Instruction.addVxToAddrReg(emu, 0xf41e.toShort)
-    assert(emu.addressRegister == (0xaa + 0xbb).toByte)
+    assert(emu.addressRegister == ((0xaa + 0xffb) & 0xfff))
     assert(emu.registers(15) == 1)
     assert(emu.programCounter == (0x300 + 2).toShort)
   }
