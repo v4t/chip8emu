@@ -14,7 +14,15 @@ class ScreenCanvas extends Canvas {
   gc.fill = Color.White
 
   def clear(): Unit = {
-//    gc.clearRect(0, 0, width.value, height.value)
+    gc.clearRect(0, 0, width.value, height.value)
+  }
+
+  def drawScreen(pixels: Array[Boolean]): Unit = {
+    for(i <- 0 until pixels.length) {
+      val x = i % 64
+      val y = i / 64
+      if(pixels(i)) gc.fillRect(x * PixelSize, y * PixelSize, PixelSize, PixelSize)
+    }
   }
 
   def setPixels(x: Int, y: Int): Unit = {

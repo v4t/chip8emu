@@ -1,6 +1,7 @@
 package torvi
 
 import java.nio.file.{Files, Paths}
+
 import scalafx.Includes._
 import scalafx.animation.KeyFrame
 import scalafx.animation.Timeline
@@ -11,30 +12,28 @@ import scalafx.scene.layout.BorderPane
 import scalafx.scene.paint.Color._
 import scalafx.scene.{Group, Scene}
 import scalafx.util.Duration
+import torvi.chip8.Emulator
 
 object Main extends JFXApp {
+  val args = parameters.unnamed
 
-//  if(args.length != 1) {
-//    println("Usage: /path/to/rom.ch8")
-//    sys.exit()
-//  }
-//  if(!Files.exists(Paths.get(args(0)))) {
-//    println("Invalid file specified")
-//    sys.exit()
-//  }
-//  val rom = Files.readAllBytes(Paths.get(args(0)))
-//
-//  println(Paths.get(args(0)))
-//  println("TODO")
+  if(args.length != 1) {
+    println("Usage: /path/to/rom.ch8")
+    sys.exit()
+  }
+  if(!Files.exists(Paths.get(args(0)))) {
+    println("Invalid file specified")
+    sys.exit()
+  }
+  val rom = Files.readAllBytes(Paths.get(args(0)))
 
-  val rnd = new scala.util.Random()
-  val s1 = 0
-  val e1 = 63
-  val s2 = 0
-  val e2 = 31
+  println(Paths.get(args(0)))
 
-  val cellCanvas = new ScreenCanvas
-  cellCanvas.initEventHandlers()
+  val emulator = new Emulator()
+  emulator.loadRom(rom)
+
+  val screenCanvas = new ScreenCanvas
+  screenCanvas.initEventHandlers()
   stage = new PrimaryStage {
 
     title = "CH8Emu"
@@ -46,17 +45,20 @@ object Main extends JFXApp {
       root = new BorderPane {
         val timeline = new Timeline {
           cycleCount = Timeline.Indefinite
-          keyFrames = KeyFrame(Duration(60), onFinished = (e: ActionEvent) => {
-            cellCanvas.clear()
-            cellCanvas.setPixels(s1 + rnd.nextInt((e1 - s1) + 1), s2 + rnd.nextInt((e2 - s2) + 1))
+          keyFrames = KeyFrame(Duration(3.1), onFinished = (e: ActionEvent) => {
+            emulator.executeCycle()
+            screenCanvas.clear()
+            screenCanvas.drawScreen(emulator.screenPixels)
+//            emulator.debugScreen()
+//            println("--------------------------------------------------------------------------------------------------------------------------------------")
           })
         }
         timeline.play()
 
         center = new Group {
-          cellCanvas.width <== 640
-          cellCanvas.height <== 320
-          children = cellCanvas
+          screenCanvas.width <== 640
+          screenCanvas.height <== 320
+          children = screenCanvas
         }
       }
     }
