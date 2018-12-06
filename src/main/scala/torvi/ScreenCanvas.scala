@@ -1,13 +1,9 @@
 package torvi
 
-import javafx.event.EventHandler
-import javafx.scene.input.MouseEvent
-import scalafx.Includes._
 import scalafx.scene.canvas.Canvas
 import scalafx.scene.paint.Color
 
 class ScreenCanvas extends Canvas {
-
   private val PixelSize = 10
   private val gc = graphicsContext2D
 
@@ -18,27 +14,10 @@ class ScreenCanvas extends Canvas {
   }
 
   def drawScreen(pixels: Array[Boolean]): Unit = {
-    for(i <- 0 until pixels.length) {
+    for (i <- 0 until pixels.length) {
       val x = i % 64
       val y = i / 64
-      if(pixels(i)) gc.fillRect(x * PixelSize, y * PixelSize, PixelSize, PixelSize)
-    }
-  }
-
-  def setPixels(x: Int, y: Int): Unit = {
-    gc.fillRect(x * PixelSize, y * PixelSize, PixelSize, PixelSize)
-//    println("x: " + x + " y: " + y + " w: " + width.value + " h " + height.value)
-  }
-
-  def initEventHandlers(): Unit = {
-    addEventHandler(MouseEvent.MOUSE_CLICKED, clickEventHandler)
-  }
-
-  private val clickEventHandler = new EventHandler[MouseEvent] {
-    override def handle(e: MouseEvent): Unit = {
-      val x = ((e.x - (e.x % PixelSize)) / PixelSize).toLong
-      val y = ((e.y - (e.y % PixelSize)) / PixelSize).toLong
-      gc.fillRect(x * PixelSize, y * PixelSize, PixelSize, PixelSize)
+      if (pixels(i)) gc.fillRect(x * PixelSize, y * PixelSize, PixelSize, PixelSize)
     }
   }
 }

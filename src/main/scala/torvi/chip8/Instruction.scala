@@ -260,18 +260,19 @@ object Instruction {
     val vx = emulator.registers((opCode & 0x0f00) >> 8)
     val vy = emulator.registers((opCode & 0x00f0) >> 4)
     val n = opCode & 0x000f
-    /* TODO draw logic */
+
     for (yLine <- 0 until n) {
       val pixel = emulator.memory(emulator.addressRegister + yLine)
       for (xLine <- 0 until 8) {
         if ((pixel & (0x80 >> xLine)) != 0) {
           val pixelPos = vx + xLine + ((vy + yLine) * emulator.screenWidth)
-          if(emulator.screenPixels(pixelPos)) emulator.registers(15) = 1
-          emulator.screenPixels(pixelPos) = !emulator.screenPixels(pixelPos)
+          if(pixelPos >= 0 && pixelPos < emulator.screenPixels.length){
+            if(emulator.screenPixels(pixelPos)) emulator.registers(15) = 1
+            emulator.screenPixels(pixelPos) = !emulator.screenPixels(pixelPos)
+          }
         }
       }
     }
-
     emulator.drawFlag = true
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
