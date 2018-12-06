@@ -79,8 +79,7 @@ object Main extends JFXApp {
       root = new BorderPane {
         val timeline = new Timeline {
           cycleCount = Timeline.Indefinite
-//          keyFrames = KeyFrame(Duration(3.1), onFinished = (e: ActionEvent) => {
-          keyFrames = KeyFrame(Duration(400), onFinished = (e: ActionEvent) => {
+          keyFrames = KeyFrame(Duration(3), onFinished = (e: ActionEvent) => {
             emulator.executeCycle()
             screenCanvas.clear()
             screenCanvas.drawScreen(emulator.screenPixels)
