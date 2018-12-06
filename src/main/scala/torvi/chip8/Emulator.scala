@@ -38,13 +38,13 @@ class Emulator {
       0xF0.toByte, 0x80.toByte, 0x80.toByte, 0x80.toByte, 0xF0.toByte, //C
       0xE0.toByte, 0x90.toByte, 0x90.toByte, 0x90.toByte, 0xE0.toByte, //D
       0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0xF0.toByte, //E
-      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte  //F
+      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte //F
     )
     for ((b: Byte, idx: Int) <- fontSet.zipWithIndex) {
       memory(idx) = b
     }
   }
-  
+
   def loadRom(rom: Array[Byte]): Unit = {
     if (rom.length > (memory.length - 512)) throw new RomTooLargeException("Rom is too large")
 
@@ -125,15 +125,29 @@ class Emulator {
     }
   }
 
-  def getRegisterValue(x: Int): Int = return registers(x) & 0xff
+  def getRegisterValue(x: Int): Int = registers(x) & 0xff
 
   def setRegisterValue(x: Int, value: Int): Unit = registers(x) = value.toByte
 
+  def getAddressRegisterValue(): Int = addressRegister & 0xfff
+
+  def setAddressRegisterValue(value: Int): Unit = addressRegister = value & 0xfff
+
+  def getMemoryAt(index: Int): Int = memory(index) & 0xff
+
+  def setMemoryAt(index: Int, value: Int): Unit = memory(index) = value.toByte
+
+  def getProgramCounter(): Int = programCounter & 0xfff
+
+  def incrementProgramCounter(): Unit = programCounter = (programCounter + 2) & 0xfff
+
+  def setProgramCounter(value: Int): Unit = programCounter = value & 0xfff
+
   def debugScreen(): Unit = {
-    for(row <- 0 until 32){
-      for(col <- 0 until 64) {
-        val i = row*64 + col
-        val pixel = if(screenPixels(i)) 1 else 0
+    for (row <- 0 until 32) {
+      for (col <- 0 until 64) {
+        val i = row * 64 + col
+        val pixel = if (screenPixels(i)) 1 else 0
         print(pixel + " ")
       }
       println()
