@@ -12,7 +12,7 @@ object Instruction {
     (0 to screenSize).foreach(i => emulator.screenPixels(i) = false)
 
     emulator.drawFlag = true
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -20,14 +20,14 @@ object Instruction {
     */
   def returnFromSub(emulator: Emulator, opCode: Int): Unit = {
     if (emulator.stack.isEmpty) throw new StackUnderflowException("Stack underflow")
-    emulator.programCounter = (emulator.stack.pop() + 2).toShort
+    emulator.setProgramCounter(emulator.stack.pop() + 2)
   }
 
   /**
     * 1NNN - Jump to address at NNN.
     */
   def jumpToAddr(emulator: Emulator, opCode: Int): Unit = {
-    emulator.programCounter = (opCode & 0x0fff).toShort
+    emulator.setProgramCounter(opCode & 0x0fff)
   }
 
   /**
@@ -35,8 +35,8 @@ object Instruction {
     */
   def callSub(emulator: Emulator, opCode: Int): Unit = {
     if (emulator.stack.length == 16) throw new StackOverflowException("Stack overflow")
-    emulator.stack.push(emulator.programCounter)
-    emulator.programCounter = (opCode & 0x0fff).toShort
+    emulator.stack.push(emulator.getProgramCounter())
+    emulator.setProgramCounter(opCode & 0x0fff)
   }
 
   /**
@@ -47,8 +47,8 @@ object Instruction {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
     val nn = opCode & 0x00ff
 
-    if (vx == nn) emulator.programCounter = (emulator.programCounter + 2).toShort
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (vx == nn) emulator.incrementProgramCounter()
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -59,8 +59,8 @@ object Instruction {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
     val nn = opCode & 0x00ff
 
-    if (vx != nn) emulator.programCounter = (emulator.programCounter + 2).toShort
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (vx != nn) emulator.incrementProgramCounter()
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -71,8 +71,8 @@ object Instruction {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
     val vy = emulator.getRegisterValue((opCode & 0x00f0) >> 4)
 
-    if (vx == vy) emulator.programCounter = (emulator.programCounter + 2).toShort
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (vx == vy) emulator.incrementProgramCounter()
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -82,7 +82,7 @@ object Instruction {
     val x = (opCode & 0x0f00) >> 8
     val nn = opCode & 0x00ff
     emulator.setRegisterValue(x, nn)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -94,7 +94,7 @@ object Instruction {
     val nn = opCode & 0x00ff
 
     emulator.setRegisterValue(x, vx + nn)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -104,7 +104,7 @@ object Instruction {
     val x = (opCode & 0x0f00) >> 8
     val vy = emulator.getRegisterValue((opCode & 0x00f0) >> 4)
     emulator.setRegisterValue(x, vy)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -112,10 +112,10 @@ object Instruction {
     */
   def setVxToVxOrVy(emulator: Emulator, opCode: Int): Unit = {
     val x = (opCode & 0x0f00) >> 8
-    val vx = emulator.registers(x)
-    val vy = emulator.registers((opCode & 0x00f0) >> 4)
-    emulator.registers(x) = (vx | vy).toByte
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    val vx = emulator.getRegisterValue(x)
+    val vy = emulator.getRegisterValue((opCode & 0x00f0) >> 4)
+    emulator.setRegisterValue(x, vx | vy)
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -127,7 +127,7 @@ object Instruction {
     val vy = emulator.getRegisterValue((opCode & 0x00f0) >> 4)
 
     emulator.setRegisterValue(x, vx & vy)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -139,7 +139,7 @@ object Instruction {
     val vy = emulator.getRegisterValue((opCode & 0x00f0) >> 4)
 
     emulator.setRegisterValue(x, vx ^ vy)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -155,7 +155,7 @@ object Instruction {
     else emulator.setRegisterValue(0xf, 0)
 
     emulator.setRegisterValue(x, vx + vy)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -171,7 +171,7 @@ object Instruction {
     else emulator.setRegisterValue(0xf, 1)
 
     emulator.setRegisterValue(x, vx - vy)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -184,7 +184,7 @@ object Instruction {
 
     emulator.setRegisterValue(0xf, vx & 0x1)
     emulator.setRegisterValue(x, vx >> 1)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -200,7 +200,7 @@ object Instruction {
     else emulator.setRegisterValue(0xf, 1)
 
     emulator.setRegisterValue(x, vy - vx)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -213,7 +213,7 @@ object Instruction {
 
     emulator.setRegisterValue(0xf, (vx >> 7) & 0x1)
     emulator.setRegisterValue(x, vx << 1)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -224,23 +224,23 @@ object Instruction {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
     val vy = emulator.getRegisterValue((opCode & 0x00f0) >> 4)
 
-    if (vx != vy) emulator.programCounter = (emulator.programCounter + 2).toShort
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (vx != vy) emulator.incrementProgramCounter()
+    emulator.incrementProgramCounter()
   }
 
   /**
     * ANNN - Sets I to the address NNN.
     */
   def setAddrRegToNn(emulator: Emulator, opCode: Int): Unit = {
-    emulator.addressRegister = opCode & 0x0fff
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.setAddressRegisterValue(opCode & 0x0fff)
+    emulator.incrementProgramCounter()
   }
 
   /**
     * BNNN - Jumps to the address NNN plus V0.
     */
   def jumpToAddrPlusV0(emulator: Emulator, opCode: Int): Unit = {
-    emulator.programCounter = (opCode & 0x0fff) + emulator.getRegisterValue(0)
+    emulator.setProgramCounter((opCode & 0x0fff) + emulator.getRegisterValue(0))
   }
 
   /**
@@ -253,7 +253,7 @@ object Instruction {
     val randomValue = 0 + rng.nextInt((255 - 0) + 1)
 
     emulator.setRegisterValue(x, randomValue & nn)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -271,20 +271,19 @@ object Instruction {
     val n = opCode & 0x000f
 
     for (yLine <- 0 until n) {
-      val memAddr = (emulator.addressRegister + yLine) & 0xfff
-      val pixel = emulator.memory(memAddr)
+      val pixel = emulator.getMemoryAt(emulator.getAddressRegisterValue() + yLine)
       for (xLine <- 0 until 8) {
         if ((pixel & (0x80 >> xLine)) != 0) {
           val pixelPos = vx + xLine + ((vy + yLine) * emulator.screenWidth)
           if(pixelPos >= 0 && pixelPos < emulator.screenPixels.length){
-            if(emulator.screenPixels(pixelPos)) emulator.registers(0xf) = 1
+            if(emulator.screenPixels(pixelPos)) emulator.setRegisterValue(0xf, 1)
             emulator.screenPixels(pixelPos) = !emulator.screenPixels(pixelPos)
           }
         }
       }
     }
     emulator.drawFlag = true
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -293,8 +292,8 @@ object Instruction {
     */
   def skipVxPressed(emulator: Emulator, opCode: Int): Unit = {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
-    if (vx < 16 && emulator.keyboardInput(vx)) emulator.programCounter = (emulator.programCounter + 2).toShort
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (vx < 16 && emulator.keyboardInput(vx)) emulator.incrementProgramCounter()
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -303,8 +302,8 @@ object Instruction {
     */
   def skipVxNotPressed(emulator: Emulator, opCode: Int): Unit = {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
-    if (vx < 16 && !emulator.keyboardInput(vx)) emulator.programCounter = (emulator.programCounter + 2).toShort
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    if (vx < 16 && !emulator.keyboardInput(vx)) emulator.incrementProgramCounter()
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -313,7 +312,7 @@ object Instruction {
   def setVxToDelayTimerValue(emulator: Emulator, opCode: Int): Unit = {
     val x = (opCode & 0x0f00) >> 8
     emulator.setRegisterValue(x, emulator.delayTimer)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -326,7 +325,7 @@ object Instruction {
 
     val x = (opCode & 0x0f00) >> 8
     emulator.setRegisterValue(x, keyPressed)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -335,7 +334,7 @@ object Instruction {
   def setDelayTimerValueToVx(emulator: Emulator, opCode: Int): Unit = {
     val x = (opCode & 0x0f00) >> 8
     emulator.delayTimer = emulator.getRegisterValue(x)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -343,8 +342,8 @@ object Instruction {
     */
   def setSoundTimerValueToVx(emulator: Emulator, opCode: Int): Unit = {
     val x = (opCode & 0x0f00) >> 8
-    emulator.soundTimer = emulator.registers(x)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.soundTimer = emulator.getRegisterValue(x)
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -353,11 +352,11 @@ object Instruction {
   def addVxToAddrReg(emulator: Emulator, opCode: Int): Unit = {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
 
-    if (emulator.addressRegister + vx > 0xfff) emulator.setRegisterValue(0xf, 1)
+    if (emulator.getAddressRegisterValue() + vx > 0xfff) emulator.setRegisterValue(0xf, 1)
     else emulator.setRegisterValue(0xf, 0)
 
-    emulator.addressRegister = (vx + emulator.addressRegister) & 0xfff
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.setAddressRegisterValue(vx + emulator.getAddressRegisterValue())
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -367,8 +366,8 @@ object Instruction {
   def setAddrRegToSpriteAddr(emulator: Emulator, opCode: Int): Unit = {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
 
-    emulator.addressRegister = emulator.spriteStartAddr + (vx * emulator.spriteLength)
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.setAddressRegisterValue(emulator.spriteStartAddr + (vx * emulator.spriteLength))
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -381,11 +380,12 @@ object Instruction {
     */
   def storeBcdForVx(emulator: Emulator, opCode: Int): Unit = {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
-    val addrReg = emulator.addressRegister & 0xfff
-    emulator.memory(addrReg) = (vx / 100).toByte
-    emulator.memory(addrReg + 1) = ((vx / 10) % 10).toByte
-    emulator.memory(addrReg + 2) = ((vx % 100) % 10).toByte
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    val addrReg = emulator.getAddressRegisterValue()
+
+    emulator.setMemoryAt(addrReg, vx / 100)
+    emulator.setMemoryAt(addrReg + 1, (vx / 10) % 10)
+    emulator.setMemoryAt(addrReg + 2, (vx % 100) % 10)
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -395,11 +395,11 @@ object Instruction {
     */
   def regDump(emulator: Emulator, opCode: Int): Unit = {
     val x = (opCode & 0x0f00) >> 8
-    val addrReg = emulator.addressRegister & 0xfff
+    val addrReg = emulator.getAddressRegisterValue()
     (0 to x).foreach(i =>
-      emulator.memory(addrReg + i) = emulator.getRegisterValue(i).toByte
+      emulator.setMemoryAt(addrReg + i, emulator.getRegisterValue(i))
     )
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
   /**
@@ -409,13 +409,12 @@ object Instruction {
     */
   def regLoad(emulator: Emulator, opCode: Int): Unit = {
     val x = (opCode & 0x0f00) >> 8 & 0xf
-    val addrReg = emulator.addressRegister & 0xfff
 
     (0 to x).foreach { i =>
-      val memAddr = (addrReg + i) & 0xfff
-      emulator.setRegisterValue(i, emulator.memory(memAddr))
+      val memAddr = emulator.getAddressRegisterValue() + i
+      emulator.setRegisterValue(i, emulator.getMemoryAt(memAddr))
     }
-    emulator.programCounter = (emulator.programCounter + 2).toShort
+    emulator.incrementProgramCounter()
   }
 
 }
