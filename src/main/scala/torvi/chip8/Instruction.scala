@@ -44,7 +44,7 @@ object Instruction {
     * (Usually the next instruction is a jump to skip a code block)
     */
   def skipVxEqualsNn(emulator: Emulator, opCode: Short): Unit = {
-    val vx = emulator.registers((opCode & 0x0f00) >> 8)
+    val vx = emulator.registers((opCode & 0x0f00) >> 8) & 0xff
     val nn = opCode & 0x00ff
 
     if (vx == nn) emulator.programCounter = (emulator.programCounter + 2).toShort
@@ -341,9 +341,9 @@ object Instruction {
     */
   def addVxToAddrReg(emulator: Emulator, opCode: Short): Unit = {
     val intVx = emulator.registers((opCode & 0x0f00) >> 8) & 0xff
-    val intAddrReg = emulator.addressRegister & 0xff
+    val intAddrReg = emulator.addressRegister & 0xfff
 
-    if (intAddrReg > (0xff - intVx)) emulator.registers(15) = 1
+    if (intAddrReg > (0xfff - intVx)) emulator.registers(15) = 1
     else emulator.registers(15) = 0
 
     emulator.addressRegister = (intVx + intAddrReg).toByte
@@ -357,8 +357,7 @@ object Instruction {
   def setAddrRegToSpriteAddr(emulator: Emulator, opCode: Short): Unit = {
     val vx = emulator.registers((opCode & 0x0f00) >> 8)
 
-    emulator.addressRegister =
-      (emulator.spriteStartAddr + (vx * emulator.spriteLength)).toByte
+    emulator.addressRegister = (emulator.spriteStartAddr + (vx * emulator.spriteLength)).toByte
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
 
@@ -372,10 +371,10 @@ object Instruction {
     */
   def storeBcdForVx(emulator: Emulator, opCode: Short): Unit = {
     val vx = emulator.registers((opCode & 0x0f00) >> 8) & 0xff
-    val i = emulator.addressRegister
-    emulator.memory(i) = (vx / 100).toByte
-    emulator.memory(i + 1) = ((vx / 10) % 10).toByte
-    emulator.memory(i + 2) = ((vx % 100) % 10).toByte
+    val addrReg = emulator.addressRegister & 0xfff
+    emulator.memory(addrReg) = (vx / 100).toByte
+    emulator.memory(addrReg + 1) = ((vx / 10) % 10).toByte
+    emulator.memory(addrReg + 2) = ((vx % 100) % 10).toByte
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
 
@@ -386,8 +385,9 @@ object Instruction {
     */
   def regDump(emulator: Emulator, opCode: Short): Unit = {
     val x = (opCode & 0x0f00) >> 8
+    val addrReg = emulator.addressRegister & 0xfff
     (0 to x).foreach(i =>
-      emulator.memory(emulator.addressRegister + i) = emulator.registers(i)
+      emulator.memory(addrReg + i) = emulator.registers(i)
     )
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
@@ -398,9 +398,11 @@ object Instruction {
     * but I itself is left unmodified.
     */
   def regLoad(emulator: Emulator, opCode: Short): Unit = {
-    val x = (opCode & 0x0f00) >> 8
+    val x = (opCode & 0x0f00) >> 8 & 0xf
+    val addrReg = emulator.addressRegister & 0xfff
+
     (0 to x).foreach(i =>
-      emulator.registers(i) = emulator.memory(emulator.addressRegister + i)
+      emulator.registers(i) = emulator.memory(addrReg + i)
     )
     emulator.programCounter = (emulator.programCounter + 2).toShort
   }
