@@ -269,6 +269,7 @@ object Instruction {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
     val vy = emulator.getRegisterValue((opCode & 0x00f0) >> 4)
     val n = opCode & 0x000f
+    emulator.setRegisterValue(0xf, 0)
 
     for (yLine <- 0 until n) {
       val pixel = emulator.getMemoryAt(emulator.getAddressRegisterValue() + yLine)
@@ -311,7 +312,7 @@ object Instruction {
     */
   def setVxToDelayTimerValue(emulator: Emulator, opCode: Int): Unit = {
     val x = (opCode & 0x0f00) >> 8
-    emulator.setRegisterValue(x, emulator.delayTimer)
+    emulator.setRegisterValue(x, emulator.getDelayTimer())
     emulator.incrementProgramCounter()
   }
 
@@ -333,7 +334,7 @@ object Instruction {
     */
   def setDelayTimerValueToVx(emulator: Emulator, opCode: Int): Unit = {
     val x = (opCode & 0x0f00) >> 8
-    emulator.delayTimer = emulator.getRegisterValue(x)
+    emulator.setDelayTimer(emulator.getRegisterValue(x))
     emulator.incrementProgramCounter()
   }
 
@@ -342,7 +343,7 @@ object Instruction {
     */
   def setSoundTimerValueToVx(emulator: Emulator, opCode: Int): Unit = {
     val x = (opCode & 0x0f00) >> 8
-    emulator.soundTimer = emulator.getRegisterValue(x)
+    emulator.setSoundTimer(emulator.getRegisterValue(x))
     emulator.incrementProgramCounter()
   }
 

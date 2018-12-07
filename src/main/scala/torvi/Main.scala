@@ -17,7 +17,6 @@ import torvi.chip8.Emulator
 
 object Main extends JFXApp {
   val args = parameters.unnamed
-
   if(args.length != 1) {
     println("Usage: /path/to/rom.ch8")
     sys.exit()
@@ -27,12 +26,8 @@ object Main extends JFXApp {
     sys.exit()
   }
   val rom = Files.readAllBytes(Paths.get(args(0)))
-
-  println(Paths.get(args(0)))
-
   val emulator = new Emulator()
   emulator.loadRom(rom)
-
   val screenCanvas = new ScreenCanvas
   stage = new PrimaryStage {
     title = "CH8Emu"
@@ -83,8 +78,6 @@ object Main extends JFXApp {
             emulator.executeCycle()
             screenCanvas.clear()
             screenCanvas.drawScreen(emulator.screenPixels)
-//            emulator.debugScreen()
-//            println("--------------------------------------------------------------------------------------------------------------------------------------")
           })
         }
         timeline.play()
