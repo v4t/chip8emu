@@ -13,8 +13,8 @@ class Emulator {
   var soundTimer: Int = 0
   var delayTimer: Int = 0
   var drawFlag = true
-  val spriteStartAddr: Byte = 0
-  val spriteLength: Byte = 5
+  val spriteStartAddr: Int = 0
+  val spriteLength: Int = 5
   val screenWidth = 64
   val screenHeight = 32
   val screenPixels: Array[Boolean] = Array.fill[Boolean](screenWidth * screenHeight)(false)
@@ -38,7 +38,7 @@ class Emulator {
       0xF0.toByte, 0x80.toByte, 0x80.toByte, 0x80.toByte, 0xF0.toByte, //C
       0xE0.toByte, 0x90.toByte, 0x90.toByte, 0x90.toByte, 0xE0.toByte, //D
       0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0xF0.toByte, //E
-      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte //F
+      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte  //F
     )
     for ((b: Byte, idx: Int) <- fontSet.zipWithIndex) {
       memory(idx) = b
@@ -54,7 +54,8 @@ class Emulator {
   }
 
   def executeCycle(): Unit = {
-    val opCode = (memory(programCounter) << 8) | (memory(programCounter + 1) & 0x00FF)
+    val pc = getProgramCounter()
+    val opCode = (getMemoryAt(pc) << 8) | getMemoryAt(pc + 1)
     opCode & 0xf000 match {
       case 0x0000 =>
         opCode & 0x00ff match {
@@ -142,6 +143,14 @@ class Emulator {
   def incrementProgramCounter(): Unit = programCounter = (programCounter + 2) & 0xfff
 
   def setProgramCounter(value: Int): Unit = programCounter = value & 0xfff
+
+  def getDelayTimer(): Int = delayTimer & 0xff
+
+  def setDelayTimer(value: Int) = delayTimer = value & 0xff
+
+  def getSoundTimer(): Int = soundTimer & 0xff
+
+  def setSoundTimer(value: Int) = soundTimer = value & 0xff
 
   def debugScreen(): Unit = {
     for (row <- 0 until 32) {
