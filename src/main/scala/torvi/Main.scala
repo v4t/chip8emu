@@ -77,7 +77,7 @@ object Main extends JFXApp {
           keyFrames = KeyFrame(Duration(3), onFinished = (e: ActionEvent) => {
             emulator.executeCycle()
             screenCanvas.clear()
-            screenCanvas.drawScreen(emulator.screenPixels)
+            screenCanvas.drawPixels(emulator.screenPixels)
           })
         }
         timeline.play()

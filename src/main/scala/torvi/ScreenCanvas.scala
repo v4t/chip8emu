@@ -13,7 +13,7 @@ class ScreenCanvas extends Canvas {
     gc.clearRect(0, 0, width.value, height.value)
   }
 
-  def drawScreen(pixels: Array[Boolean]): Unit = {
+  def drawPixels(pixels: Array[Boolean]): Unit = {
     for (i <- 0 until pixels.length) {
       val x = i % 64
       val y = i / 64
