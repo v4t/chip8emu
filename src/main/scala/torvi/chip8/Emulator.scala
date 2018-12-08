@@ -12,7 +12,6 @@ class Emulator {
   var programCounter: Int = 0x200
   var soundTimer: Int = 0
   var delayTimer: Int = 0
-  var drawFlag = true
   val spriteStartAddr: Int = 0
   val spriteLength: Int = 5
   val screenWidth = 64
