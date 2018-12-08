@@ -37,7 +37,7 @@ class Emulator {
       0xF0.toByte, 0x80.toByte, 0x80.toByte, 0x80.toByte, 0xF0.toByte, //C
       0xE0.toByte, 0x90.toByte, 0x90.toByte, 0x90.toByte, 0xE0.toByte, //D
       0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0xF0.toByte, //E
-      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte  //F
+      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte //F
     )
     for ((b: Byte, idx: Int) <- fontSet.zipWithIndex) {
       memory(idx) = b
@@ -53,7 +53,7 @@ class Emulator {
   }
 
   def executeCycle(): Unit = {
-    val pc = getProgramCounter()
+    val pc = getProgramCounter
     val opCode = (getMemoryAt(pc) << 8) | getMemoryAt(pc + 1)
     opCode & 0xf000 match {
       case 0x0000 =>
@@ -129,7 +129,7 @@ class Emulator {
 
   def setRegisterValue(x: Int, value: Int): Unit = registers(x) = value.toByte
 
-  def getAddressRegisterValue(): Int = addressRegister & 0xfff
+  def getAddressRegisterValue: Int = addressRegister & 0xfff
 
   def setAddressRegisterValue(value: Int): Unit = addressRegister = value & 0xfff
 
@@ -137,19 +137,19 @@ class Emulator {
 
   def setMemoryAt(index: Int, value: Int): Unit = memory(index) = value.toByte
 
-  def getProgramCounter(): Int = programCounter & 0xfff
+  def getProgramCounter: Int = programCounter & 0xfff
 
   def incrementProgramCounter(): Unit = programCounter = (programCounter + 2) & 0xfff
 
   def setProgramCounter(value: Int): Unit = programCounter = value & 0xfff
 
-  def getDelayTimer(): Int = delayTimer & 0xff
+  def getDelayTimer: Int = delayTimer & 0xff
 
-  def setDelayTimer(value: Int) = delayTimer = value & 0xff
+  def setDelayTimer(value: Int): Unit = delayTimer = value & 0xff
 
-  def getSoundTimer(): Int = soundTimer & 0xff
+  def getSoundTimer: Int = soundTimer & 0xff
 
-  def setSoundTimer(value: Int) = soundTimer = value & 0xff
+  def setSoundTimer(value: Int): Unit = soundTimer = value & 0xff
 
   def debugScreen(): Unit = {
     for (row <- 0 until 32) {
