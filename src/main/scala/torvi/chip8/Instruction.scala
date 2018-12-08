@@ -11,7 +11,6 @@ object Instruction {
     val screenSize = emulator.screenPixels.length - 1
     (0 to screenSize).foreach(i => emulator.screenPixels(i) = false)
 
-    emulator.drawFlag = true
     emulator.incrementProgramCounter()
   }
 
@@ -283,7 +282,6 @@ object Instruction {
         }
       }
     }
-    emulator.drawFlag = true
     emulator.incrementProgramCounter()
   }
 
