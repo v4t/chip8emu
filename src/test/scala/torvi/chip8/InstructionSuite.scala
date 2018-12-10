@@ -8,14 +8,12 @@ class InstructionSuite extends  FunSuite {
   test("00E0: Clear screen instruction") {
     val emu = new Emulator()
     emu.programCounter = 0x259
-    emu.drawFlag = false
     emu.screenPixels(0) = true
     emu.screenPixels(12) = true
 
     Instruction.clearScreen(emu, 0x00e0)
     exactly(emu.screenWidth * emu.screenHeight, emu.screenPixels) should be(false)
     assert(emu.programCounter == (0x259 + 2).toShort)
-    assert(emu.drawFlag)
   }
 
   test("00EE: Return from subroutine") {
@@ -360,7 +358,6 @@ class InstructionSuite extends  FunSuite {
   test("DXYN: Draw sprite at coordinate VX, VY. VF is left unset because no pixels are flipped") {
     val emu = new Emulator()
     emu.programCounter = 0x600
-    emu.drawFlag = false
     emu.registers(4) = 0x0
     emu.registers(5) = 0x0
     emu.addressRegister = 0x800
@@ -393,13 +390,11 @@ class InstructionSuite extends  FunSuite {
     // rest of emulator state
     assert(emu.programCounter == (0x600 + 2).toShort)
     assert(emu.registers(15) == 0)
-    assert(emu.drawFlag)
   }
 
   test("DXYN: Draw sprite at coordinate VX, VY. VF is set to 1 because pixel was flipped") {
     val emu = new Emulator()
     emu.programCounter = 0x600
-    emu.drawFlag = false
     emu.registers(4) = 0x0
     emu.registers(5) = 0x0
     emu.addressRegister = 0x800
@@ -433,7 +428,6 @@ class InstructionSuite extends  FunSuite {
     // rest of emulator state
     assert(emu.programCounter == (0x600 + 2).toShort)
     assert(emu.registers(15) == 1)
-    assert(emu.drawFlag)
   }
 
 

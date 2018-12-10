@@ -34,7 +34,7 @@ object Instruction {
     */
   def callSub(emulator: Emulator, opCode: Int): Unit = {
     if (emulator.stack.length == 16) throw new StackOverflowException("Stack overflow")
-    emulator.stack.push(emulator.getProgramCounter())
+    emulator.stack.push(emulator.getProgramCounter)
     emulator.setProgramCounter(opCode & 0x0fff)
   }
 
@@ -271,7 +271,7 @@ object Instruction {
     emulator.setRegisterValue(0xf, 0)
 
     for (yLine <- 0 until n) {
-      val pixel = emulator.getMemoryAt(emulator.getAddressRegisterValue() + yLine)
+      val pixel = emulator.getMemoryAt(emulator.getAddressRegisterValue + yLine)
       for (xLine <- 0 until 8) {
         if ((pixel & (0x80 >> xLine)) != 0) {
           val pixelPos = vx + xLine + ((vy + yLine) * emulator.screenWidth)
@@ -310,7 +310,7 @@ object Instruction {
     */
   def setVxToDelayTimerValue(emulator: Emulator, opCode: Int): Unit = {
     val x = (opCode & 0x0f00) >> 8
-    emulator.setRegisterValue(x, emulator.getDelayTimer())
+    emulator.setRegisterValue(x, emulator.getDelayTimer)
     emulator.incrementProgramCounter()
   }
 
@@ -351,10 +351,10 @@ object Instruction {
   def addVxToAddrReg(emulator: Emulator, opCode: Int): Unit = {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
 
-    if (emulator.getAddressRegisterValue() + vx > 0xfff) emulator.setRegisterValue(0xf, 1)
+    if (emulator.getAddressRegisterValue + vx > 0xfff) emulator.setRegisterValue(0xf, 1)
     else emulator.setRegisterValue(0xf, 0)
 
-    emulator.setAddressRegisterValue(vx + emulator.getAddressRegisterValue())
+    emulator.setAddressRegisterValue(vx + emulator.getAddressRegisterValue)
     emulator.incrementProgramCounter()
   }
 
@@ -379,7 +379,7 @@ object Instruction {
     */
   def storeBcdForVx(emulator: Emulator, opCode: Int): Unit = {
     val vx = emulator.getRegisterValue((opCode & 0x0f00) >> 8)
-    val addrReg = emulator.getAddressRegisterValue()
+    val addrReg = emulator.getAddressRegisterValue
 
     emulator.setMemoryAt(addrReg, vx / 100)
     emulator.setMemoryAt(addrReg + 1, (vx / 10) % 10)
@@ -394,7 +394,7 @@ object Instruction {
     */
   def regDump(emulator: Emulator, opCode: Int): Unit = {
     val x = (opCode & 0x0f00) >> 8
-    val addrReg = emulator.getAddressRegisterValue()
+    val addrReg = emulator.getAddressRegisterValue
     (0 to x).foreach(i =>
       emulator.setMemoryAt(addrReg + i, emulator.getRegisterValue(i))
     )
@@ -410,7 +410,7 @@ object Instruction {
     val x = (opCode & 0x0f00) >> 8 & 0xf
 
     (0 to x).foreach { i =>
-      val memAddr = emulator.getAddressRegisterValue() + i
+      val memAddr = emulator.getAddressRegisterValue + i
       emulator.setRegisterValue(i, emulator.getMemoryAt(memAddr))
     }
     emulator.incrementProgramCounter()
