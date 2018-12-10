@@ -37,7 +37,7 @@ class Emulator {
       0xF0.toByte, 0x80.toByte, 0x80.toByte, 0x80.toByte, 0xF0.toByte, //C
       0xE0.toByte, 0x90.toByte, 0x90.toByte, 0x90.toByte, 0xE0.toByte, //D
       0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0xF0.toByte, //E
-      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte //F
+      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte  //F
     )
     for ((b: Byte, idx: Int) <- fontSet.zipWithIndex) {
       memory(idx) = b
@@ -113,15 +113,15 @@ class Emulator {
   }
 
   def updateDelayTimer(): Unit = {
-    val intTimer = delayTimer & 0xff
-    if (intTimer > 0) delayTimer = (intTimer - 1).toByte
+    val timer = getDelayTimer
+    if (timer > 0) setDelayTimer(timer - 1)
   }
 
   def updateSoundTimer(): Unit = {
-    val intTimer = soundTimer & 0xff
-    if (intTimer > 0) {
-      if (intTimer == 1) println("beep")
-      soundTimer = (intTimer - 1).toByte
+    val timer = getSoundTimer
+    if (timer > 0) {
+      if (timer == 1) println("BEEP")
+      setSoundTimer(timer - 1)
     }
   }
 
