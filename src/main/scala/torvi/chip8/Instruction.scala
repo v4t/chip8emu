@@ -18,8 +18,7 @@ object Instruction {
     * 00EE - Returns from a subroutine.
     */
   def returnFromSub(emulator: Emulator, opCode: Int): Unit = {
-    if (emulator.stack.isEmpty) throw new StackUnderflowException("Stack underflow")
-    emulator.setProgramCounter(emulator.stack.pop() + 2)
+    emulator.setProgramCounter(emulator.popStack() + 2)
   }
 
   /**
@@ -33,8 +32,7 @@ object Instruction {
     * 2NNN - Calls subroutine at NNN.
     */
   def callSub(emulator: Emulator, opCode: Int): Unit = {
-    if (emulator.stack.length == 16) throw new StackOverflowException("Stack overflow")
-    emulator.stack.push(emulator.getProgramCounter)
+    emulator.pushStack(emulator.getProgramCounter)
     emulator.setProgramCounter(opCode & 0x0fff)
   }
 

@@ -14,7 +14,7 @@ class ScreenCanvas extends Canvas {
   }
 
   def drawPixels(pixels: Array[Boolean]): Unit = {
-    for (i <- 0 until pixels.length) {
+    for (i <- pixels.indices) {
       val x = i % 64
       val y = i / 64
       if (pixels(i)) gc.fillRect(x * PixelSize, y * PixelSize, PixelSize, PixelSize)

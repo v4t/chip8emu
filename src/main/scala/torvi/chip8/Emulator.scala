@@ -1,11 +1,9 @@
 package torvi.chip8
 
-import scala.collection.mutable.Stack
-
 class Emulator {
   val memory: Array[Byte] = Array.fill[Byte](4096)(0)
-  val stack = Stack[Int]()
   val registers: Array[Byte] = Array.fill[Byte](16)(0)
+  val stack: Array[Int] = Array.fill[Int](16)(0)
   val keyboardInput: Array[Boolean] = Array.fill[Boolean](16)(false)
   var addressRegister: Int = 0
   var stackPointer: Int = 0
@@ -19,30 +17,6 @@ class Emulator {
   val screenPixels: Array[Boolean] = Array.fill[Boolean](screenWidth * screenHeight)(false)
 
   initFontSet()
-
-  private def initFontSet(): Unit = {
-    val fontSet: Array[Byte] = Array(
-      0xF0.toByte, 0x90.toByte, 0x90.toByte, 0x90.toByte, 0xF0.toByte, //0
-      0x20.toByte, 0x60.toByte, 0x20.toByte, 0x20.toByte, 0x70.toByte, //1
-      0xF0.toByte, 0x10.toByte, 0xF0.toByte, 0x80.toByte, 0xF0.toByte, //2
-      0xF0.toByte, 0x10.toByte, 0xF0.toByte, 0x10.toByte, 0xF0.toByte, //3
-      0x90.toByte, 0x90.toByte, 0xF0.toByte, 0x10.toByte, 0x10.toByte, //4
-      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x10.toByte, 0xF0.toByte, //5
-      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x90.toByte, 0xF0.toByte, //6
-      0xF0.toByte, 0x10.toByte, 0x20.toByte, 0x40.toByte, 0x40.toByte, //7
-      0xF0.toByte, 0x90.toByte, 0xF0.toByte, 0x90.toByte, 0xF0.toByte, //8
-      0xF0.toByte, 0x90.toByte, 0xF0.toByte, 0x10.toByte, 0xF0.toByte, //9
-      0xF0.toByte, 0x90.toByte, 0xF0.toByte, 0x90.toByte, 0x90.toByte, //A
-      0xE0.toByte, 0x90.toByte, 0xE0.toByte, 0x90.toByte, 0xE0.toByte, //B
-      0xF0.toByte, 0x80.toByte, 0x80.toByte, 0x80.toByte, 0xF0.toByte, //C
-      0xE0.toByte, 0x90.toByte, 0x90.toByte, 0x90.toByte, 0xE0.toByte, //D
-      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0xF0.toByte, //E
-      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte  //F
-    )
-    for ((b: Byte, idx: Int) <- fontSet.zipWithIndex) {
-      memory(idx) = b
-    }
-  }
 
   def loadRom(rom: Array[Byte]): Unit = {
     if (rom.length > (memory.length - 512)) throw new RomTooLargeException("Rom is too large")
@@ -120,11 +94,13 @@ class Emulator {
   def updateSoundTimer(): Unit = {
     val timer = getSoundTimer
     if (timer > 0) {
-      if (timer == 1) println("BEEP")
+//      if (timer == 1) println("BEEP")
       setSoundTimer(timer - 1)
     }
   }
 
+  // Accessors and mutators for emulator internal state..
+  // These handle some bit twiddling since jvm does not have native unsigned types.
   def getRegisterValue(x: Int): Int = registers(x) & 0xff
 
   def setRegisterValue(x: Int, value: Int): Unit = registers(x) = value.toByte
@@ -151,14 +127,39 @@ class Emulator {
 
   def setSoundTimer(value: Int): Unit = soundTimer = value & 0xff
 
-  def debugScreen(): Unit = {
-    for (row <- 0 until 32) {
-      for (col <- 0 until 64) {
-        val i = row * 64 + col
-        val pixel = if (screenPixels(i)) 1 else 0
-        print(pixel + " ")
-      }
-      println()
+  def pushStack(value: Int): Unit = {
+    if (stackPointer == stack.length) throw new StackOverflowException("Stack overflow")
+    stack(stackPointer) = value
+    stackPointer += 1
+  }
+
+  def popStack(): Int = {
+    if (stackPointer == 0) throw new StackUnderflowException("Stack underflow")
+    stackPointer -= 1
+    stack(stackPointer)
+  }
+
+  private def initFontSet(): Unit = {
+    val fontSet: Array[Byte] = Array(
+      0xF0.toByte, 0x90.toByte, 0x90.toByte, 0x90.toByte, 0xF0.toByte, //0
+      0x20.toByte, 0x60.toByte, 0x20.toByte, 0x20.toByte, 0x70.toByte, //1
+      0xF0.toByte, 0x10.toByte, 0xF0.toByte, 0x80.toByte, 0xF0.toByte, //2
+      0xF0.toByte, 0x10.toByte, 0xF0.toByte, 0x10.toByte, 0xF0.toByte, //3
+      0x90.toByte, 0x90.toByte, 0xF0.toByte, 0x10.toByte, 0x10.toByte, //4
+      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x10.toByte, 0xF0.toByte, //5
+      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x90.toByte, 0xF0.toByte, //6
+      0xF0.toByte, 0x10.toByte, 0x20.toByte, 0x40.toByte, 0x40.toByte, //7
+      0xF0.toByte, 0x90.toByte, 0xF0.toByte, 0x90.toByte, 0xF0.toByte, //8
+      0xF0.toByte, 0x90.toByte, 0xF0.toByte, 0x10.toByte, 0xF0.toByte, //9
+      0xF0.toByte, 0x90.toByte, 0xF0.toByte, 0x90.toByte, 0x90.toByte, //A
+      0xE0.toByte, 0x90.toByte, 0xE0.toByte, 0x90.toByte, 0xE0.toByte, //B
+      0xF0.toByte, 0x80.toByte, 0x80.toByte, 0x80.toByte, 0xF0.toByte, //C
+      0xE0.toByte, 0x90.toByte, 0x90.toByte, 0x90.toByte, 0xE0.toByte, //D
+      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0xF0.toByte, //E
+      0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte  //F
+    )
+    for ((b: Byte, idx: Int) <- fontSet.zipWithIndex) {
+      memory(idx) = b
     }
   }
 }
