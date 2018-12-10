@@ -20,12 +20,13 @@ class InstructionSuite extends  FunSuite {
     val emu = new Emulator()
     val addr = 0x305.toByte
     emu.programCounter = 0x300
-    emu.stack.push(addr)
+    emu.stack(0) = addr
+    emu.stackPointer = 1
 
     Instruction.returnFromSub(emu, 0x00ee.toShort)
 
     assert(emu.programCounter == (addr + 2).toShort)
-    assert(emu.stack.isEmpty)
+    assert(emu.stackPointer == 0)
   }
 
   test("00EE: Return from subroutine throws error if stack is empty") {
@@ -49,8 +50,7 @@ class InstructionSuite extends  FunSuite {
     emu.programCounter = 0x300
 
     Instruction.callSub(emu, 0x2234)
-    assert(emu.stack.length == 1)
-    assert(emu.stack.pop() == 0x300)
+    assert(emu.stack(0) == 0x300)
     assert(emu.programCounter == 0x234.toShort)
   }
 
