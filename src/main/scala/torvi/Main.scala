@@ -18,7 +18,7 @@ import torvi.chip8.Emulator
 object Main extends JFXApp {
   val args = parameters.unnamed
   if(args.length != 1) {
-    println("Usage: /path/to/rom.ch8")
+    println("Usage: /path/to/rom")
     sys.exit()
   }
   if(!Files.exists(Paths.get(args(0)))) {
